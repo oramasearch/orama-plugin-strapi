@@ -1,4 +1,4 @@
-const { getSchemaFromAttributes, getSelectedAttributesFromSchema } = require('./schema')
+const { getSchemaFromAttributes, getSelectedAttributesFromSchema, getSchemaFromEntryStructure } = require('./schema')
 
 describe('Schema Utils', () => {
   describe('getSchemaFromAttributes', () => {
@@ -54,6 +54,29 @@ describe('Schema Utils', () => {
       }
       const result = getSelectedAttributesFromSchema({ schema })
       expect(result).toEqual(['address.city', 'address.zip'])
+    })
+  })
+
+  describe('getSchemaFromEntryStructure', () => {
+    it('should return the correct schema', () => {
+      const entry = {
+        potato: 'hello',
+        apple: 5,
+        watermelon: {
+          seeds: {
+            many: true
+          }
+        },
+        banana: ['yellow', 'green']
+      }
+      const result = getSchemaFromEntryStructure(entry)
+
+      expect(result).toEqual({
+        potato: 'string',
+        apple: 'number',
+        watermelon: { seeds: { many: 'boolean' } },
+        banana: 'string[]'
+      })
     })
   })
 })

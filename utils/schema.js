@@ -25,4 +25,24 @@ const getSelectedAttributesFromSchema = ({ schema }) => {
   }, [])
 }
 
-module.exports = { getSchemaFromAttributes, getSelectedAttributesFromSchema }
+const getSchemaFromEntryStructure = (entry) => {
+  return Object.entries(entry).reduce((acc, [key, value]) => {
+    if (Array.isArray(value)) {
+      const firstValue = value[0]
+      if (['string', 'number', 'boolean'].includes(typeof firstValue)) {
+        acc[key] = `${typeof firstValue}[]`
+      }
+    } else if (typeof value === 'object') {
+      acc[key] = getSchemaFromEntryStructure(value)
+    } else {
+      acc[key] = typeof value
+    }
+    return acc
+  }, {})
+}
+
+module.exports = {
+  getSchemaFromAttributes,
+  getSelectedAttributesFromSchema,
+  getSchemaFromEntryStructure
+}

@@ -1,7 +1,7 @@
 'use strict'
 
 const { CloudManager } = require('@oramacloud/client')
-const { getSchemaFromAttributes } = require('../../utils/schema')
+const { getSchemaFromEntryStructure, getSchemaFromAttributes } = require('../../utils/schema')
 
 class OramaManager {
   constructor({ strapi }) {
@@ -9,6 +9,7 @@ class OramaManager {
     this.contentTypesService = strapi.plugin('orama-cloud').service('contentTypesService')
     this.collectionService = strapi.plugin('orama-cloud').service('collectionsService')
     this.privateApiKey = strapi.config.get('plugin.orama-cloud.privateApiKey')
+    this.collectionSettings = strapi.config.get('plugin.orama-cloud.collectionSettings')
 
     this.oramaCloudManager = new CloudManager({ api_key: this.privateApiKey })
     this.DocumentActionsMap = {
@@ -46,6 +47,31 @@ class OramaManager {
     return true
   }
 
+  filterOutNonSearchableAttributes(schema, searchableAttributes) {
+    return Object.entries(schema).reduce((acc, [key, value]) => {
+      if (searchableAttributes.includes(key)) {
+        acc[key] = value
+      }
+      return acc
+    })
+  }
+
+  documentsTransformer(indexId, entries) {
+    const transformerFnMap = this.collectionSettings[indexId]?.documentsTransformer
+
+    if (!transformerFnMap) {
+      return entries
+    }
+
+    return entries.map((entry) => {
+      return Object.entries(entry)
+        .map(([key, value]) => ({
+          [key]: transformerFnMap[key]?.(value) ?? value
+        }))
+        .reduce((acc, curr) => ({ ...acc, ...curr }), {})
+    })
+  }
+
   async setOutdated(collection) {
     return await this.collectionService.updateWithoutHooks(collection.id, {
       status: 'outdated'
@@ -80,6 +106,11 @@ class OramaManager {
     return await index.snapshot([])
   }
 
+  /*
+   * Processes all entries from a collection and inserts them into the index
+   * Bulk insert is done recursively to avoid memory issues
+   * Bulk dispatches 50 entries at a time
+   * */
   async bulkInsert(collection, offset = 0) {
     const entries = await this.contentTypesService.getEntries({
       contentType: collection.entity,
@@ -89,6 +120,19 @@ class OramaManager {
     })
 
     if (entries.length > 0) {
+      if (offset === 0) {
+        const transformedEntries = this.documentsTransformer(collection.indexId, entries)
+        const filteredEntry = this.filterOutNonSearchableAttributes(
+          transformedEntries[0],
+          collection.searchableAttributes
+        )
+
+        await this.oramaUpdateSchema({
+          indexId: collection.indexId,
+          schema: getSchemaFromEntryStructure(filteredEntry)
+        })
+      }
+
       await this.oramaInsert({
         indexId: collection.indexId,
         entries
@@ -107,18 +151,32 @@ class OramaManager {
 
   async oramaInsert({ indexId, entries }) {
     const index = this.oramaCloudManager.index(indexId)
-    const result = await index.insert(entries)
+    const formattedData = this.documentsTransformer(indexId, entries)
 
-    this.strapi.log.info(`INSERT: documents with id ${entries.map(({ id }) => id)} into index ${indexId}`)
+    if (!formattedData) {
+      this.strapi.log.error(`ERROR: documentsTransformer needs a return value`)
+      return false
+    }
+
+    const result = await index.insert(formattedData)
+
+    this.strapi.log.info(`INSERT: documents with id ${formattedData.map(({ id }) => id)} into index ${indexId}`)
 
     return result
   }
 
   async oramaUpdate({ indexId, entries }) {
     const index = this.oramaCloudManager.index(indexId)
-    const result = await index.update(entries)
+    const formattedData = this.documentsTransformer?.(entries) || entries
 
-    this.strapi.log.info(`UPDATE: document with id ${entries.map(({ id }) => id)} into index ${indexId}`)
+    if (!formattedData) {
+      this.strapi.log.error(`ERROR: documentsTransformer needs a return value`)
+      return false
+    }
+
+    const result = await index.update(formattedData)
+
+    this.strapi.log.info(`UPDATE: document with id ${formattedData.map(({ id }) => id)} into index ${indexId}`)
 
     return result
   }
@@ -149,19 +207,9 @@ class OramaManager {
       return
     }
 
-    const oramaSchema = getSchemaFromAttributes({
-      attributes: collection.searchableAttributes,
-      schema: collection.schema
-    })
-
     await this.updatingStarted(collection)
 
     await this.resetIndex(collection)
-
-    await this.oramaUpdateSchema({
-      indexId: collection.indexId,
-      schema: oramaSchema
-    })
 
     const { documents_count } = await this.bulkInsert(collection)
 
