@@ -3,7 +3,7 @@ const { CloudManager } = require('@oramacloud/client')
 const { mockCollection, mockNotValidCollection } = require('../__mocks__/collection')
 const { mockedTestRecord } = require('../__mocks__/content-types')
 
-const titleTransformer = jest.fn(title => title.toUpperCase())
+const titleTransformer = jest.fn((title) => title.toUpperCase())
 
 const strapi = {
   plugin: jest.fn().mockReturnThis(),
@@ -118,10 +118,7 @@ describe('OramaManager', () => {
 
   describe('filterOutNonSearchableAttributes', () => {
     it('should filter out non searchable attributes', () => {
-      const result = oramaManager.filterOutNonSearchableAttributes(
-        { id: '2', title: 'hello' },
-        ['title']
-      )
+      const result = oramaManager.filterOutNonSearchableAttributes({ id: '2', title: 'hello' }, ['title'])
 
       expect(result).toEqual({ title: 'hello' })
     })
@@ -137,13 +134,14 @@ describe('OramaManager', () => {
     it('should return transformed entries if transformer functions are found', () => {
       strapi.config.get = jest.fn((string) => {
         if (string === 'plugin.orama-cloud.privateApiKey') return 'mockPrivateApiKey'
-        if (string === 'plugin.orama-cloud.collectionSettings') return {
-          "indexId": {
-            documentsTransformer: {
-              title: titleTransformer
-            },
+        if (string === 'plugin.orama-cloud.collectionSettings')
+          return {
+            indexId: {
+              documentsTransformer: {
+                title: titleTransformer
+              }
+            }
           }
-        }
       })
 
       oramaManager = new OramaManager({ strapi })
@@ -250,13 +248,14 @@ describe('OramaManager', () => {
     it('should call documentsTransformer fn if declared in plugin config', async () => {
       strapi.config.get = jest.fn((string) => {
         if (string === 'plugin.orama-cloud.privateApiKey') return 'mockPrivateApiKey'
-        if (string === 'plugin.orama-cloud.collectionSettings') return {
-          [mockCollection.indexId]: {
-            documentsTransformer: {
-              title: titleTransformer
-            },
+        if (string === 'plugin.orama-cloud.collectionSettings')
+          return {
+            [mockCollection.indexId]: {
+              documentsTransformer: {
+                title: titleTransformer
+              }
+            }
           }
-        }
       })
       oramaManager = new OramaManager({ strapi })
       const documentsTransformerSpy = jest.spyOn(oramaManager, 'documentsTransformer')
