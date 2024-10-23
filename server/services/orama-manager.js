@@ -1,7 +1,7 @@
 "use strict"
 
 const { CloudManager } = require("@oramacloud/client")
-const { getSchemaFromEntryStructure, getSchemaFromAttributes } = require("../../utils/schema")
+const { getSchemaFromEntryStructure } = require("../../utils/schema")
 
 class OramaManager {
   constructor({ strapi }) {
