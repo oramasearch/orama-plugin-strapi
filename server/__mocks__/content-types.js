@@ -121,7 +121,7 @@ const expectedContentTypes = [
       bio: 'string',
       email: 'string',
       name: 'string',
-      posts: "collection"
+      posts: 'collection'
     },
     availableRelations: [
       {
