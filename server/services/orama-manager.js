@@ -150,7 +150,10 @@ class OramaManager {
     if (entries.length > 0) {
       if (offset === 0) {
         const transformedEntries = this.documentsTransformer(collection.indexId, entries)
-        const filteredEntry = getSelectedPropsFromObj({ props: collection.searchableAttributes, obj: transformedEntries[0] })
+        const filteredEntry = getSelectedPropsFromObj({
+          props: collection.searchableAttributes,
+          obj: transformedEntries[0]
+        })
 
         await this.oramaUpdateSchema({
           indexId: collection.indexId,
