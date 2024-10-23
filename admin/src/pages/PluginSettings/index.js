@@ -28,7 +28,12 @@ const isValidCollection = (collections, newCollection) => {
     }
   }
 
-  if ((!newCollection.schema || Object.keys(newCollection.schema).length === 0) || !newCollection.searchableAttributes || newCollection.searchableAttributes.length === 0) {
+  if (
+    !newCollection.schema ||
+    Object.keys(newCollection.schema).length === 0 ||
+    !newCollection.searchableAttributes ||
+    newCollection.searchableAttributes.length === 0
+  ) {
     return {
       error: 'Select at least one searchable attribute'
     }
