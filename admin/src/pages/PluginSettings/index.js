@@ -22,7 +22,7 @@ import pluginId from '../../pluginId'
 import CollectionForm from '../../components/CollectionForm'
 
 const isValidCollection = (collections, newCollection) => {
-  if (collections.some((col) => col.indexId === newCollection.indexId)) {
+  if (collections.filter((col) => col.indexId === newCollection.indexId).length > 1) {
     return {
       error: 'Index ID must be unique'
     }
@@ -189,7 +189,7 @@ const HomePage = () => {
   }
 
   const handleUpdate = async () => {
-    const { error } = isValidCollection(currentCollection)
+    const { error } = isValidCollection(collections, currentCollection)
     if (error) {
       return onValidateError(error)
     }

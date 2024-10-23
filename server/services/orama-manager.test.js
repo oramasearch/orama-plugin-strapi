@@ -116,14 +116,6 @@ describe('OramaManager', () => {
     })
   })
 
-  describe('filterOutNonSearchableAttributes', () => {
-    it('should filter out non searchable attributes', () => {
-      const result = oramaManager.filterOutNonSearchableAttributes({ id: '2', title: 'hello' }, ['title'])
-
-      expect(result).toEqual({ title: 'hello' })
-    })
-  })
-
   describe('documentsTransformer', () => {
     it('should return entries if no transformer functions are found', () => {
       const result = oramaManager.documentsTransformer('unknown', [{ id: 1, title: 'Test Entry' }])

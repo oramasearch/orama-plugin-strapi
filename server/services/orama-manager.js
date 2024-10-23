@@ -1,7 +1,7 @@
 'use strict'
 
 const { CloudManager } = require('@oramacloud/client')
-const { getSchemaFromEntryStructure } = require('../../utils/schema')
+const { getSchemaFromEntryStructure, getSelectedPropsFromObj } = require('../../utils/schema')
 
 class OramaManager {
   constructor({ strapi }) {
@@ -51,19 +51,6 @@ class OramaManager {
     }
 
     return true
-  }
-
-  /*
-   * Filters out non-searchable attributes from an entry
-   * @param {Object} entry - Entry object
-   * */
-  filterOutNonSearchableAttributes(entry, searchableAttributes) {
-    return Object.entries(entry).reduce((acc, [key, value]) => {
-      if (searchableAttributes.includes(key)) {
-        acc[key] = value
-      }
-      return acc
-    }, {})
   }
 
   /*
@@ -163,10 +150,7 @@ class OramaManager {
     if (entries.length > 0) {
       if (offset === 0) {
         const transformedEntries = this.documentsTransformer(collection.indexId, entries)
-        const filteredEntry = this.filterOutNonSearchableAttributes(
-          transformedEntries[0],
-          collection.searchableAttributes
-        )
+        const filteredEntry = getSelectedPropsFromObj({ props: collection.searchableAttributes, obj: transformedEntries[0] })
 
         await this.oramaUpdateSchema({
           indexId: collection.indexId,

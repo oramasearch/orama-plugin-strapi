@@ -14,7 +14,7 @@ import {
   Typography
 } from '@strapi/design-system'
 import WarningIcon from '../WarningIcon'
-import { getSchemaFromAttributes, getSelectedAttributesFromSchema } from '../../../../utils/schema'
+import { getSelectedPropsFromObj, getSelectedAttributesFromSchema } from '../../../../utils/schema'
 
 const isCollection = (value) => Array.isArray(value) && value.length > 0 && typeof value[0] === 'object'
 
@@ -63,9 +63,9 @@ const SchemaMapper = ({ collection, contentTypeSchema, onSchemaChange }) => {
   })
 
   React.useEffect(() => {
-    const schema = getSchemaFromAttributes({
-      attributes: selectedAttributes,
-      schema: contentTypeSchema
+    const schema = getSelectedPropsFromObj({
+      props: selectedAttributes,
+      obj: contentTypeSchema
     })
 
     onSchemaChange({ schema, searchableAttributes })

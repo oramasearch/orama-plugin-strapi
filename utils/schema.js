@@ -1,14 +1,14 @@
-const getSchemaFromAttributes = ({ attributes, schema }) => {
-  return attributes.reduce((acc, field) => {
+const getSelectedPropsFromObj = ({ props, obj }) => {
+  return props.reduce((acc, field) => {
     if (field.includes('.')) {
       const [parent, child] = field.split('.')
       if (!acc[parent]) {
         acc[parent] = {}
       }
 
-      acc[parent][child] = schema[parent][child]
+      acc[parent][child] = obj[parent][child]
     } else {
-      acc[field] = schema[field]
+      acc[field] = obj[field]
     }
     return acc
   }, {})
@@ -42,7 +42,7 @@ const getSchemaFromEntryStructure = (entry) => {
 }
 
 module.exports = {
-  getSchemaFromAttributes,
+  getSelectedPropsFromObj,
   getSelectedAttributesFromSchema,
   getSchemaFromEntryStructure
 }
