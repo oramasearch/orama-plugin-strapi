@@ -47,17 +47,17 @@ class OramaManager {
     return true
   }
 
-  filterOutNonSearchableAttributes(schema, searchableAttributes) {
-    return Object.entries(schema).reduce((acc, [key, value]) => {
+  filterOutNonSearchableAttributes(entry, searchableAttributes) {
+    return Object.entries(entry).reduce((acc, [key, value]) => {
       if (searchableAttributes.includes(key)) {
         acc[key] = value
       }
       return acc
-    })
+    }, {})
   }
 
   documentsTransformer(indexId, entries) {
-    const transformerFnMap = this.collectionSettings[indexId]?.documentsTransformer
+    const transformerFnMap = this.collectionSettings?.[indexId]?.documentsTransformer
 
     if (!transformerFnMap) {
       return entries
