@@ -57,12 +57,11 @@
     "jest": "^29.7.0"
   },
   "peerDependencies": {
-    "@strapi/sdk-plugin": "^5.2.6",
-    "@strapi/strapi": "^5.0.3",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "react-router-dom": "^6.26.2",
-    "styled-components": "^6.1.13"
+    "@strapi/sdk-plugin": ">= 5.x",
+    "@strapi/strapi": "^5.0.0 || ^5.0.0-beta || ^5.0.0-alpha || ^5.0.0-rc",
+    "react": ">= 18.x",
+    "react-dom": ">= 18.x",
+    "react-router-dom": ">= 6.x"
   },
   "strapi": {
     "name": "orama-cloud",
