@@ -12,6 +12,7 @@ const RelationsSelect = ({ onChange, collectionRelations, relations = [] }) => (
         disabled={relations.length === 0}
         onChange={onChange}
         value={collectionRelations}
+        withTags
       >
         {relations.map((relation, i) => (
           <MultiSelectOption key={relation.value + i} value={relation.value}>
