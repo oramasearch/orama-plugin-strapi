@@ -48,9 +48,7 @@ const CollectionForm = ({
           content: (
             <Flex direction="column" alignItems="flex-start" gap={6}>
               <Box width="100%">
-                <Field.Root
-                  id="with_field"
-                >
+                <Field.Root id="with_field">
                   <Field.Label>Index ID</Field.Label>
                   <TextInput
                     required
@@ -69,9 +67,7 @@ const CollectionForm = ({
               </Box>
               <Flex alignItems="flex-start" justifyContent="space-between" style={{ width: '100%' }}>
                 <Flex style={{ width: '49%' }}>
-                  <Field.Root
-                    id="with_field"
-                  >
+                  <Field.Root id="with_field">
                     <Field.Label>Content Type</Field.Label>
                     <SingleSelect
                       required
@@ -135,12 +131,8 @@ const CollectionForm = ({
                   onValueChange={(value) => onFieldChange({ name: 'updateHook', value })}
                   value={collection?.updateHook || 'live'}
                 >
-                  <Radio.Item value="live">
-                    Live update
-                  </Radio.Item>
-                  <Radio.Item value="cron">
-                    Scheduled job
-                  </Radio.Item>
+                  <Radio.Item value="live">Live update</Radio.Item>
+                  <Radio.Item value="cron">Scheduled job</Radio.Item>
                 </Radio.Group>
               </Box>
               <Box width="100%">

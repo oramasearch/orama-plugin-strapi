@@ -1,1 +1,1 @@
-export const PLUGIN_ID = 'orama-cloud';
+export const PLUGIN_ID = 'orama-cloud'

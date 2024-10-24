@@ -1,8 +1,8 @@
-import { getTranslation } from './utils/getTranslation';
-import { PLUGIN_ID } from './pluginId';
-import { Initializer } from './components/Initializer';
-import { PluginIcon } from './components/PluginIcon';
-import {strapi} from '../../package.json'
+import { getTranslation } from './utils/getTranslation'
+import { PLUGIN_ID } from './pluginId'
+import { Initializer } from './components/Initializer'
+import { PluginIcon } from './components/PluginIcon'
+import { strapi } from '../../package.json'
 
 export default {
   register(app) {
@@ -11,25 +11,25 @@ export default {
       icon: PluginIcon,
       intlLabel: {
         id: `${PLUGIN_ID}.plugin.name`,
-        defaultMessage: strapi.displayName,
+        defaultMessage: strapi.displayName
       },
       Component: async () => {
-        const { App } = await import('./pages/App');
+        const { App } = await import('./pages/App')
 
-        return App;
-      },
-    });
+        return App
+      }
+    })
 
     app.registerPlugin({
       id: PLUGIN_ID,
       initializer: Initializer,
       isReady: false,
-      name: PLUGIN_ID,
-    });
+      name: PLUGIN_ID
+    })
   },
 
   async registerTrads(app) {
-    const { locales } = app;
+    const { locales } = app
 
     const importedTranslations = await Promise.all(
       locales.map((locale) => {
@@ -37,18 +37,18 @@ export default {
           .then(({ default: data }) => {
             return {
               data: getTranslation(data),
-              locale,
-            };
+              locale
+            }
           })
           .catch(() => {
             return {
               data: {},
-              locale,
-            };
-          });
+              locale
+            }
+          })
       })
-    );
+    )
 
-    return importedTranslations;
-  },
-};
+    return importedTranslations
+  }
+}

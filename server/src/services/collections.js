@@ -1,6 +1,6 @@
-"use strict"
+'use strict'
 
-const DOCUMENT_NAME = "plugin::orama-cloud.collection"
+const DOCUMENT_NAME = 'plugin::orama-cloud.collection'
 
 module.exports = ({ strapi }) => {
   return {
@@ -27,11 +27,14 @@ module.exports = ({ strapi }) => {
       const document = await strapi.documents(DOCUMENT_NAME).create({
         data: {
           ...data,
-          status: "outdated"
+          status: 'outdated'
         }
       })
 
-      strapi.plugin("orama-cloud").service("oramaManagerService").afterCollectionCreationOrUpdate({ documentId: document.documentId })
+      strapi
+        .plugin('orama-cloud')
+        .service('oramaManagerService')
+        .afterCollectionCreationOrUpdate({ documentId: document.documentId })
 
       return document
     },
@@ -46,11 +49,14 @@ module.exports = ({ strapi }) => {
         documentId: documentId,
         data: {
           ...data,
-          status: "outdated"
+          status: 'outdated'
         }
       })
 
-      strapi.plugin("orama-cloud").service("oramaManagerService").afterCollectionCreationOrUpdate({ documentId: document.documentId })
+      strapi
+        .plugin('orama-cloud')
+        .service('oramaManagerService')
+        .afterCollectionCreationOrUpdate({ documentId: document.documentId })
 
       return document
     },
@@ -64,7 +70,7 @@ module.exports = ({ strapi }) => {
      */
     async updateWithoutHooks(id, data) {
       return await strapi.db.transaction(async ({ trx }) => {
-        return await trx.from("orama-cloud_collections").where({ id }).update(data, '*')
+        return await trx.from('orama-cloud_collections').where({ id }).update(data, '*')
       })
     },
 
@@ -73,7 +79,7 @@ module.exports = ({ strapi }) => {
      * @param {string} documentId
      */
     async delete(documentId) {
-      return strapi.documents(DOCUMENT_NAME).delete({ documentId, locale: "*" })
+      return strapi.documents(DOCUMENT_NAME).delete({ documentId, locale: '*' })
     },
 
     /**
@@ -87,9 +93,9 @@ module.exports = ({ strapi }) => {
         throw new Error(`Collection with documentId ${documentId} not found`)
       }
 
-      await this.updateWithoutHooks(collection.id, { status: "outdated" }, documentId)
+      await this.updateWithoutHooks(collection.id, { status: 'outdated' }, documentId)
 
-      strapi.plugin("orama-cloud").service("oramaManagerService").deployIndex({ documentId })
+      strapi.plugin('orama-cloud').service('oramaManagerService').deployIndex({ documentId })
     }
   }
 }

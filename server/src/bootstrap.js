@@ -1,7 +1,7 @@
-'use strict';
+'use strict'
 
 const bootstrap = ({ strapi }) => {
   // bootstrap phase
-};
+}
 
-module.exports = bootstrap;
+module.exports = bootstrap

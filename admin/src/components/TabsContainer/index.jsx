@@ -1,5 +1,5 @@
-import React, { useRef } from "react"
-import { Tabs, Divider, Box } from "@strapi/design-system"
+import React, { useRef } from 'react'
+import { Tabs, Divider, Box } from '@strapi/design-system'
 
 export const TabsContainer = ({ tabs }) => {
   const tabGroupRef = useRef()
@@ -15,7 +15,9 @@ export const TabsContainer = ({ tabs }) => {
     >
       <Tabs.List>
         {tabs.map((tab) => (
-          <Tabs.Trigger key={tab.id} value={tab.id}>{tab.title}</Tabs.Trigger>
+          <Tabs.Trigger key={tab.id} value={tab.id}>
+            {tab.title}
+          </Tabs.Trigger>
         ))}
       </Tabs.List>
 
@@ -23,7 +25,9 @@ export const TabsContainer = ({ tabs }) => {
 
       <Box paddingTop={6}>
         {tabs.map((tab) => (
-          <Tabs.Content key={tab.id} value={tab.id}>{tab.content}</Tabs.Content>
+          <Tabs.Content key={tab.id} value={tab.id}>
+            {tab.content}
+          </Tabs.Content>
         ))}
       </Box>
     </Tabs.Root>

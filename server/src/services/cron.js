@@ -69,11 +69,13 @@ module.exports = ({ strapi }) => {
       })
 
       async function handleUpdateStatus() {
-        await collectionService.updateWithoutHooks(collection.id, {
-          status: 'outdated'
-        }).then((updatedCollections) => {
-          oramaService.processScheduledUpdate(updatedCollections[0])
-        })
+        await collectionService
+          .updateWithoutHooks(collection.id, {
+            status: 'outdated'
+          })
+          .then((updatedCollections) => {
+            oramaService.processScheduledUpdate(updatedCollections[0])
+          })
       }
     }
   }

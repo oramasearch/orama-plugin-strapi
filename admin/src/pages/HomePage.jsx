@@ -1,39 +1,32 @@
-import React, { useEffect, useState } from "react"
-import { useIntl } from "react-intl"
-import {
-  Box,
-  Button,
-  Flex,
-  LinkButton,
-  Loader,
-  Modal,
-  Typography,
-  Status
-} from "@strapi/design-system"
-import {
-  Page,
-  Layouts
-} from "@strapi/strapi/admin"
-import { ExternalLink, Plus } from "@strapi/icons"
-import { useFetchClient, useNotification } from "@strapi/strapi/admin"
-import { PLUGIN_ID } from "../pluginId"
-import CollectionsTable from "../components/CollectionsTable"
-import CollectionForm from "../components/CollectionForm"
+import React, { useEffect, useState } from 'react'
+import { useIntl } from 'react-intl'
+import { Box, Button, Flex, LinkButton, Loader, Modal, Typography, Status } from '@strapi/design-system'
+import { Page, Layouts } from '@strapi/strapi/admin'
+import { ExternalLink, Plus } from '@strapi/icons'
+import { useFetchClient, useNotification } from '@strapi/strapi/admin'
+import { PLUGIN_ID } from '../pluginId'
+import CollectionsTable from '../components/CollectionsTable'
+import CollectionForm from '../components/CollectionForm'
 
-const isValidCollection = (collection) => {
-  if (!collection.schema || Object.keys(collection.schema).length === 0) {
+const isValidCollection = (collections, newCollection) => {
+  if (collections.filter((col) => col.indexId === newCollection.indexId).length > 1) {
     return {
-      error: 'Select at least one attribute'
+      error: 'Index ID must be unique'
     }
   }
 
-  if (!collection.searchableAttributes || collection.searchableAttributes.length === 0) {
+  if (
+    !newCollection.schema ||
+    Object.keys(newCollection.schema).length === 0 ||
+    !newCollection.searchableAttributes ||
+    newCollection.searchableAttributes.length === 0
+  ) {
     return {
       error: 'Select at least one searchable attribute'
     }
   }
 
-  if (collection.indexId?.length === 0) {
+  if (newCollection.indexId?.length === 0) {
     return {
       error: 'Index ID is required'
     }
@@ -62,10 +55,10 @@ const HomePage = () => {
       .then((response) => setCollections(response.data))
       .then(() => setIsLoading(false))
       .catch((err) => {
-        console.error("Failed to load collections.", err)
+        console.error('Failed to load collections.', err)
         toggleNotification({
-          type: "warning",
-          defaultdefaultMessage: "Failed to load collections."
+          type: 'warning',
+          defaultdefaultMessage: 'Failed to load collections.'
         })
       })
 
@@ -73,10 +66,10 @@ const HomePage = () => {
       .then((response) => setContentTypes(response.data))
       .then(() => setIsLoading(false))
       .catch((err) => {
-        console.error("Failed to load collections.", err)
+        console.error('Failed to load collections.', err)
         toggleNotification({
-          type: "warning",
-          defaultdefaultMessage: "Failed to load content types."
+          type: 'warning',
+          defaultdefaultMessage: 'Failed to load content types.'
         })
       })
   }
@@ -97,14 +90,14 @@ const HomePage = () => {
 
   const handleCreateClick = () => {
     setCurrentCollection({
-      indexId: "",
+      indexId: '',
       entity: undefined,
       includedRelations: [],
       searchableAttributes: [],
       schema: {},
-      status: "outdated",
-      updateHook: "live",
-      updateCron: "0 * * * *",
+      status: 'outdated',
+      updateHook: 'live',
+      updateCron: '0 * * * *',
       deployedAt: undefined
     })
     setFormEditMode(false)
@@ -143,13 +136,13 @@ const HomePage = () => {
 
   const onValidateError = (error) => {
     toggleNotification({
-      type: "warning",
+      type: 'warning',
       message: error
     })
   }
 
   const handleCreate = async () => {
-    const { error } = isValidCollection(currentCollection)
+    const { error } = isValidCollection(collections, currentCollection)
 
     if (error) {
       return onValidateError(error)
@@ -160,16 +153,16 @@ const HomePage = () => {
     try {
       const newCollection = await post(`/${PLUGIN_ID}/collections`, currentCollection)
       toggleNotification({
-        type: "success",
-        message: "Collection created successfully."
+        type: 'success',
+        message: 'Collection created successfully.'
       })
       setCollections((prevCollections) => [...prevCollections, newCollection.data])
       setIsModalVisible(false)
     } catch (err) {
       console.error(err)
       toggleNotification({
-        type: "warning",
-        message: "Failed to create collection."
+        type: 'warning',
+        message: 'Failed to create collection.'
       })
     } finally {
       setIsSaving(false)
@@ -177,7 +170,7 @@ const HomePage = () => {
   }
 
   const handleUpdate = async () => {
-    const { error } = isValidCollection(currentCollection)
+    const { error } = isValidCollection(collections, currentCollection)
 
     if (error) {
       return onValidateError(error)
@@ -187,8 +180,8 @@ const HomePage = () => {
     try {
       const collection = await put(`/${PLUGIN_ID}/collections/${currentCollection.documentId}`, currentCollection)
       toggleNotification({
-        type: "success",
-        message: "Collection updated successfully."
+        type: 'success',
+        message: 'Collection updated successfully.'
       })
       setCollections((prevCollections) =>
         prevCollections.map((col) => (col.id === collection.data?.id ? collection.data : col))
@@ -197,8 +190,8 @@ const HomePage = () => {
     } catch (err) {
       console.error(err)
       toggleNotification({
-        type: "warning",
-        message: "Failed to update collection."
+        type: 'warning',
+        message: 'Failed to update collection.'
       })
     } finally {
       setIsSaving(false)
@@ -210,15 +203,15 @@ const HomePage = () => {
     try {
       await del(`/${PLUGIN_ID}/collections/${currentCollection.documentId}`)
       toggleNotification({
-        type: "success",
-        message: "Collection deleted successfully."
+        type: 'success',
+        message: 'Collection deleted successfully.'
       })
       setCollections((prevCollections) => prevCollections.filter((col) => col.id !== currentCollection.id))
     } catch (err) {
       console.error(err)
       toggleNotification({
-        type: "warning",
-        message: "Failed to delete collection."
+        type: 'warning',
+        message: 'Failed to delete collection.'
       })
     }
   }
@@ -228,14 +221,14 @@ const HomePage = () => {
     try {
       await post(`/${PLUGIN_ID}/collections/${currentCollection.documentId}/deploy`)
       toggleNotification({
-        type: "success",
-        message: "Collection deployment started."
+        type: 'success',
+        message: 'Collection deployment started.'
       })
     } catch (err) {
       console.error(err)
       toggleNotification({
-        type: "warning",
-        message: "Failed to deploy collection."
+        type: 'warning',
+        message: 'Failed to deploy collection.'
       })
     }
   }
@@ -259,7 +252,7 @@ const HomePage = () => {
                   endIcon={<ExternalLink />}
                   size="L"
                   variant="secondary"
-                  style={{ whiteSpace: "nowrap", textDecoration: "none" }}
+                  style={{ whiteSpace: 'nowrap', textDecoration: 'none' }}
                 >
                   View indexes
                 </LinkButton>
@@ -285,7 +278,7 @@ const HomePage = () => {
               {isModalVisible && (
                 <Modal.Root
                   open={isModalVisible}
-                  style={{ maxWidth: "700px" }}
+                  style={{ maxWidth: '700px' }}
                   onOpenChange={(isOpen) => {
                     if (!isOpen) {
                       setIsModalVisible(false)
@@ -311,44 +304,42 @@ const HomePage = () => {
                       />
                     </Modal.Body>
                     <Modal.Footer>
-                      {
-                        formEditMode ? (
-                          <Flex justifyContent="space-between" grow={1}>
-                            <Flex>
-                              {formEditMode ? (
-                                <Button onClick={handleDelete} variant="danger-light">
-                                  Delete collection
-                                </Button>
-                              ) : (
-                                <Button onClick={() => setIsModalVisible(false)} variant="tertiary">
-                                  Cancel
-                                </Button>
-                              )}
-                            </Flex>
-                            <Flex gap={4}>
-                              <LinkButton
-                                href={`https://cloud.orama.com/indexes/view/${currentCollection.indexId}`}
-                                isExternal
-                                endIcon={<ExternalLink width={10} />}
-                                variant="tertiary"
-                                style={{
-                                  whiteSpace: "nowrap",
-                                  textDecoration: "none"
-                                }}
-                              >
-                                View index
-                              </LinkButton>
-                              <Button onClick={handleUpdate} loading={isSaving}>
-                                Update
+                      {formEditMode ? (
+                        <Flex justifyContent="space-between" grow={1}>
+                          <Flex>
+                            {formEditMode ? (
+                              <Button onClick={handleDelete} variant="danger-light">
+                                Delete collection
                               </Button>
-                            </Flex>
+                            ) : (
+                              <Button onClick={() => setIsModalVisible(false)} variant="tertiary">
+                                Cancel
+                              </Button>
+                            )}
                           </Flex>
-                        ) : (
-                          <Button onClick={handleCreate} loading={isSaving}>
-                            Create
-                          </Button>
-                        )
-                      }
+                          <Flex gap={4}>
+                            <LinkButton
+                              href={`https://cloud.orama.com/indexes/view/${currentCollection.indexId}`}
+                              isExternal
+                              endIcon={<ExternalLink width={10} />}
+                              variant="tertiary"
+                              style={{
+                                whiteSpace: 'nowrap',
+                                textDecoration: 'none'
+                              }}
+                            >
+                              View index
+                            </LinkButton>
+                            <Button onClick={handleUpdate} loading={isSaving}>
+                              Update
+                            </Button>
+                          </Flex>
+                        </Flex>
+                      ) : (
+                        <Button onClick={handleCreate} loading={isSaving}>
+                          Create
+                        </Button>
+                      )}
                     </Modal.Footer>
                   </Modal.Content>
                 </Modal.Root>
@@ -369,7 +360,7 @@ const HomePage = () => {
                         <Typography>
                           By doing a manual deploy, your index will be updated immediately
                           <br />
-                          with the most recent data from your Content-Type{" "}
+                          with the most recent data from your Content-Type{' '}
                           <Flex inline>
                             <Status variant="secondary" size="S" showBullet={false}>
                               <Typography>{currentCollection.entity}</Typography>
@@ -393,8 +384,8 @@ const HomePage = () => {
                           endIcon={<ExternalLink width={10} />}
                           variant="tertiary"
                           style={{
-                            whiteSpace: "nowrap",
-                            textDecoration: "none"
+                            whiteSpace: 'nowrap',
+                            textDecoration: 'none'
                           }}
                         >
                           View index

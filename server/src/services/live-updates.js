@@ -32,11 +32,13 @@ module.exports = ({ strapi }) => {
       async function handleLiveUpdates(event, action) {
         const { result } = event
 
-        await collectionService.updateWithoutHooks(collection.id, {
-          status: 'outdated'
-        }).then((updatedCollections) => {
-          oramaService.processLiveUpdate(updatedCollections[0], result, action)
-        })
+        await collectionService
+          .updateWithoutHooks(collection.id, {
+            status: 'outdated'
+          })
+          .then((updatedCollections) => {
+            oramaService.processLiveUpdate(updatedCollections[0], result, action)
+          })
       }
     }
   }

@@ -14,8 +14,11 @@ const OramaTypesMap = {
   date: 'string',
   time: 'string',
   datetime: 'string',
-  enumeration: 'enum'
+  enumeration: 'enum',
+  collection: 'collection'
 }
+
+const arrayRelations = ['oneToMany', 'manyToMany']
 
 const filterContentTypesAPIs = ({ contentTypes }) => {
   return Object.keys(contentTypes).reduce((sanitized, contentType) => {
@@ -48,14 +51,23 @@ const shouldAttributeBeIncluded = (attribute, includedRelations) => {
 
 const getSelectedRelations = ({ schema, relations }) => {
   return relations.reduce((acc, relation) => {
-    acc[relation] = {
-      select: Object.keys(schema[relation]).map((key) => key)
+    if (schema[relation] === 'collection') {
+      acc[relation] = {
+        select: '*'
+      }
+    } else {
+      acc[relation] = {
+        select: Object.keys(schema[relation]).map((key) => key)
+      }
     }
     return acc
   }, {})
 }
 const getSelectedFieldsConfigObj = (schema) =>
-  Object.entries(schema).reduce((acc, [key, value]) => (typeof value === 'object' ? acc : [...acc, key]), ['id'])
+  Object.entries(schema).reduce(
+    (acc, [key, value]) => (typeof value === 'object' || value === 'collection' ? acc : [...acc, key]),
+    ['id']
+  )
 
 module.exports = ({ strapi }) => {
   return {
@@ -116,10 +128,14 @@ module.exports = ({ strapi }) => {
 
     getType(attribute) {
       if (attribute.type === 'relation') {
-        return this.getContentTypeSchema({
-          contentTypeId: attribute.target,
-          includedRelations: []
-        })
+        if (arrayRelations.includes(attribute.relation)) {
+          return OramaTypesMap.collection
+        } else {
+          return this.getContentTypeSchema({
+            contentTypeId: attribute.target,
+            includedRelations: []
+          })
+        }
       }
 
       return OramaTypesMap[attribute.type]
