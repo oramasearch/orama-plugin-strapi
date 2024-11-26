@@ -3,12 +3,38 @@
 const ENTITY_NAME = 'plugin::orama-cloud.collection'
 
 module.exports = ({ strapi }) => {
+  const collectionSettings = strapi.config.get('plugin.orama-cloud.collectionSettings')
+
   return {
     /**
      * Find all collection records
      */
     async find() {
-      return strapi.entityService.findMany(ENTITY_NAME)
+      const collections = await strapi.entityService.findMany(ENTITY_NAME)
+
+      return collectionSettings
+        ? collections.reduce((acc, collection) => {
+            const settings = collectionSettings[collection.indexId]
+            const hasValidSettings = settings?.schema && settings?.transformer
+
+            if (settings) {
+              if (hasValidSettings) {
+                acc.push({
+                  ...collection,
+                  hasSettings: true
+                })
+              } else {
+                strapi.log.warn(
+                  `Collection with indexId ${collection.indexId} has settings but no schema or transformer`
+                )
+              }
+            } else {
+              acc.push(collection)
+            }
+
+            return acc
+          }, [])
+        : collections
     },
 
     /**

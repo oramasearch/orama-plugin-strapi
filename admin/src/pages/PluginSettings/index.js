@@ -21,20 +21,25 @@ import CollectionsTable from '../../components/CollectionsTable'
 import pluginId from '../../pluginId'
 import CollectionForm from '../../components/CollectionForm'
 
-const isValidCollection = (collection) => {
-  if (!collection.schema || Object.keys(collection.schema).length === 0) {
+const isValidCollection = (collections, newCollection) => {
+  if (collections.filter((col) => col.indexId === newCollection.indexId).length > 1) {
     return {
-      error: 'Select at least one attribute'
+      error: 'Index ID must be unique'
     }
   }
 
-  if (!collection.searchableAttributes || collection.searchableAttributes.length === 0) {
+  if (
+    !newCollection.schema ||
+    Object.keys(newCollection.schema).length === 0 ||
+    !newCollection.searchableAttributes ||
+    newCollection.searchableAttributes.length === 0
+  ) {
     return {
       error: 'Select at least one searchable attribute'
     }
   }
 
-  if (collection.indexId?.length === 0) {
+  if (newCollection.indexId?.length === 0) {
     return {
       error: 'Index ID is required'
     }
@@ -90,7 +95,7 @@ const HomePage = () => {
   }, [get])
 
   useEffect(() => {
-    if (currentCollection && !currentContentType) {
+    if (currentCollection) {
       const contentType = contentTypes.find((ct) => ct.value === currentCollection.entity)
       setCurrentContentType(contentType)
     }
@@ -150,8 +155,9 @@ const HomePage = () => {
   }
 
   const handleCreate = async () => {
-    if (!isValidCollection(currentCollection)) {
-      return onValidateError()
+    const { error } = isValidCollection(collections, currentCollection)
+    if (error) {
+      return onValidateError(error)
     }
 
     setIsSaving(true)
@@ -176,7 +182,7 @@ const HomePage = () => {
   }
 
   const handleUpdate = async () => {
-    const { error } = isValidCollection(currentCollection)
+    const { error } = isValidCollection(collections, currentCollection)
     if (error) {
       return onValidateError(error)
     }
