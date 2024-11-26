@@ -3,11 +3,19 @@ const { CloudManager } = require('@oramacloud/client')
 const { mockCollection, mockNotValidCollection } = require('../__mocks__/collection')
 const { mockedTestRecord } = require('../__mocks__/content-types')
 
+const mockTransformer = jest.fn((entry) => ({
+  ...entry,
+  title: entry.title.toUpperCase()
+}))
+
 const strapi = {
   plugin: jest.fn().mockReturnThis(),
   service: jest.fn().mockReturnThis(),
   config: {
-    get: jest.fn().mockReturnValue('mockPrivateApiKey')
+    get: jest.fn((string) => {
+      if (string === 'plugin.orama-cloud.privateApiKey') return 'mockPrivateApiKey'
+      if (string === 'plugin.orama-cloud.collectionSettings') return null
+    })
   },
   log: {
     error: jest.fn(),
@@ -61,7 +69,10 @@ describe('OramaManager', () => {
 
   describe('validate', () => {
     afterEach(() => {
-      jest.spyOn(strapi.config, 'get').mockReturnValue('mockPrivateApiKey')
+      strapi.config.get = jest.fn((string) => {
+        if (string === 'plugin.orama-cloud.privateApiKey') return 'mockPrivateApiKey'
+        if (string === 'plugin.orama-cloud.documentsTransformer') return null
+      })
     })
 
     it('should return false if collection is not found', () => {
@@ -72,7 +83,10 @@ describe('OramaManager', () => {
     })
 
     it('should return false if privateApiKey is not found', () => {
-      jest.spyOn(strapi.config, 'get').mockReturnValueOnce()
+      strapi.config.get = jest.fn((string) => {
+        if (string === 'plugin.orama-cloud.privateApiKey') return null
+        if (string === 'plugin.orama-cloud.documentsTransformer') return null
+      })
       oramaManager = new OramaManager({ strapi })
       const result = oramaManager.validate(mockCollection)
 
@@ -98,10 +112,79 @@ describe('OramaManager', () => {
       )
     })
 
+    it('should return false if collection has settings but schema is missing', () => {
+      strapi.config.get = jest.fn((string) => {
+        if (string === 'plugin.orama-cloud.privateApiKey') return 'mockPrivateApiKey'
+        if (string === 'plugin.orama-cloud.collectionSettings')
+          return {
+            [mockCollection.indexId]: {
+              transformer: mockTransformer
+            }
+          }
+      })
+      oramaManager = new OramaManager({ strapi })
+
+      const result = oramaManager.validate(mockCollection)
+
+      expect(result).toBe(false)
+      expect(strapi.log.error).toHaveBeenCalledWith(
+        `ERROR: Both schema and transformer are required in the collection settings`
+      )
+    })
+
+    it('should return false if collection has settings but transformer is missing', () => {
+      strapi.config.get = jest.fn((string) => {
+        if (string === 'plugin.orama-cloud.privateApiKey') return 'mockPrivateApiKey'
+        if (string === 'plugin.orama-cloud.collectionSettings')
+          return {
+            [mockCollection.indexId]: {
+              schema: {}
+            }
+          }
+      })
+      oramaManager = new OramaManager({ strapi })
+
+      const result = oramaManager.validate(mockCollection)
+
+      expect(result).toBe(false)
+      expect(strapi.log.error).toHaveBeenCalledWith(
+        `ERROR: Both schema and transformer are required in the collection settings`
+      )
+    })
+
     it('should return true if all validations pass', () => {
       const result = oramaManager.validate(mockCollection)
 
       expect(result).toBe(true)
+    })
+  })
+
+  describe('documentsTransformer', () => {
+    it('should return entries if no transformer functions are found', () => {
+      const result = oramaManager.documentsTransformer('unknown', [{ id: 1, title: 'Test Entry' }])
+
+      expect(result).toEqual([{ id: 1, title: 'Test Entry' }])
+    })
+
+    it('should return transformed entries if transformer functions are found', () => {
+      strapi.config.get = jest.fn((string) => {
+        if (string === 'plugin.orama-cloud.privateApiKey') return 'mockPrivateApiKey'
+        if (string === 'plugin.orama-cloud.collectionSettings')
+          return {
+            indexId: {
+              schema: {
+                title: 'string'
+              },
+              transformer: mockTransformer
+            }
+          }
+      })
+
+      oramaManager = new OramaManager({ strapi })
+
+      const result = oramaManager.documentsTransformer('indexId', [{ id: 1, title: 'Test Entry' }])
+
+      expect(result).toEqual([{ id: 1, title: 'TEST ENTRY' }])
     })
   })
 
@@ -185,6 +268,7 @@ describe('OramaManager', () => {
 
   describe('oramaInsert', () => {
     it('should insert entries', async () => {
+      const documentsTransformerSpy = jest.spyOn(oramaManager, 'documentsTransformer')
       const { insert } = new CloudManager({ strapi }).index()
 
       await oramaManager.oramaInsert({
@@ -193,6 +277,40 @@ describe('OramaManager', () => {
       })
 
       expect(insert).toHaveBeenCalledWith([{ id: 1, title: 'Test Entry' }])
+      expect(documentsTransformerSpy).toHaveBeenCalledWith(mockCollection.indexId, [{ id: 1, title: 'Test Entry' }])
+      expect(mockTransformer).not.toHaveBeenCalledWith('Test Entry')
+    })
+
+    it('should call documentsTransformer fn if declared in plugin config', async () => {
+      strapi.config.get = jest.fn((string) => {
+        if (string === 'plugin.orama-cloud.privateApiKey') return 'mockPrivateApiKey'
+        if (string === 'plugin.orama-cloud.collectionSettings')
+          return {
+            [mockCollection.indexId]: {
+              schema: {},
+              transformer: mockTransformer
+            }
+          }
+      })
+      oramaManager = new OramaManager({ strapi })
+      const documentsTransformerSpy = jest.spyOn(oramaManager, 'documentsTransformer')
+      const { insert } = new CloudManager({ strapi }).index()
+
+      await oramaManager.oramaInsert({
+        indexId: mockCollection.indexId,
+        entries: [{ id: 1, title: 'Test Entry' }]
+      })
+
+      expect(documentsTransformerSpy).toHaveBeenCalledWith(mockCollection.indexId, [{ id: 1, title: 'Test Entry' }])
+      expect(mockTransformer).toHaveBeenCalledWith({ id: 1, title: 'Test Entry' })
+      expect(insert).toHaveBeenCalledWith([{ id: 1, title: 'TEST ENTRY' }])
+    })
+
+    afterAll(() => {
+      strapi.config.get = jest.fn((string) => {
+        if (string === 'plugin.orama-cloud.privateApiKey') return 'mockPrivateApiKey'
+        if (string === 'plugin.orama-cloud.collectionSettings') return null
+      })
     })
   })
 
@@ -297,19 +415,13 @@ describe('OramaManager', () => {
 
     describe('afterCollectionCreationOrUpdate', () => {
       it('should populate index', async () => {
-        const { updateSchema, deploy } = cloudManager
-
         await oramaManager.afterCollectionCreationOrUpdate(mockCollection)
 
         expect(oramaManager.validate).toHaveBeenCalledWith(mockCollection)
         expect(updatingStartedSpy).toHaveBeenCalledWith(mockCollection)
         expect(resetIndexSpy).toHaveBeenCalledWith(mockCollection)
-        expect(updateSchema).toHaveBeenCalledWith({
-          indexId: mockCollection.index,
-          schema: mockCollection.schema
-        })
-        expect(oramaDeployIndexSpy).toHaveBeenCalled()
         expect(bulkInsertSpy).toHaveBeenCalledWith(mockCollection)
+        expect(oramaDeployIndexSpy).toHaveBeenCalled()
         expect(updatingCompletedSpy).toHaveBeenCalledWith(mockCollection, mockedBulkInsertResult.documents_count)
       })
       it('should not populate if collection is not valid', async () => {

@@ -89,3 +89,97 @@ When the **Scheduled job** is executed, it checks the collection status, to avoi
 already in sync. You can always trigger a new deployment manually.
 
 <img src="https://raw.githubusercontent.com/askorama/orama-plugin-strapi/main/misc/assets/deploy.gif" alt="Manual deploy" width="600" />
+
+---
+## Advanced usage
+
+### Documents transformation
+The scope of the transformation is to modify the document before it is sent to the Orama Cloud API. This can be useful to add, remove or modify fields in the document.
+A common use case is to change how a collection is handled (array of objects) to a flat structure [this is not supported by Orama Cloud].
+Here is an example of how to transform a collection of objects to a flat structure:
+
+#### Pre-requisites
+- An Orama Cloud index.
+- A Strapi collection already created, with relations.
+
+Example document:
+```json
+{
+  "id": 1,
+  "owner": "John",
+  "cars": [
+    {
+      "brand": "Toyota",
+      "model": "Corolla"
+    },
+    {
+      "brand": "Ford",
+      "model": "Focus"
+    }
+  ]
+}
+```
+You can insert your transformer function directly inside the plugin configuration under `config/plugins.js` file:
+
+```js
+module.exports = ({ env }) => ({
+  "orama-cloud": {
+    config: {
+      privateApiKey: env("ORAMA_PRIVATE_API_KEY"),
+      collectionSettings: {
+        your_collection_index_id: {
+          /* Mandatory */
+          schema: {
+            id: { type: "integer" },
+            owner: { type: "string" },
+            cars: {
+              brands: { type: "string" },
+              models: { type: "string" },
+            },
+          },
+          /* Mandatory */
+          transformer: entry => {
+            return {
+              ...entry,
+              owner: "Overriding owner",
+              cars: {
+                source: entry.cars,
+                ...entry.cars.reduce(car => {
+                  acc.brands.push(car.brand);
+                  acc.models.push(car.model);
+                  return acc;
+                }, {
+                  brands: [],
+                  models: [],
+                }),
+              },
+            }
+          },
+        }
+      }
+    },
+  },
+})
+```
+
+In this way your cars will be transformed to:
+```json
+{
+  "id": 1,
+  "owner": "Overriding owner",
+  "cars": {
+    "brands": ["Toyota", "Ford"],
+    "models": ["Corolla", "Focus"]
+  }
+}
+```
+And make you car brands and models searchable.
+
+:warning: Both schema and transformer are mandatory.
+
+:warning: The transformer function must return an object with the same schema as the one declared.
+
+:warning: All the properties not declared in it will be included in the document, but ignored while searching.
+
+
+For more information about the plugin, please visit the [Orama Cloud documentation](https://docs.orama.com/cloud/data-sources/native-integrations/strapi).

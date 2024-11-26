@@ -1,16 +1,63 @@
 import React from 'react'
-import { Box, Checkbox, Flex, Switch, Table, Thead, Tbody, Tr, Th, Td, Typography } from '@strapi/design-system'
-import { getSchemaFromAttributes, getSelectedAttributesFromSchema } from '../../../../utils/schema'
+import {
+  Box,
+  Button,
+  Checkbox,
+  Flex,
+  Switch,
+  Table,
+  Thead,
+  Tbody,
+  Tr,
+  Th,
+  Td,
+  Typography,
+  Tooltip,
+  Status
+} from '@strapi/design-system'
+import WarningIcon from '../WarningIcon'
+import { getSelectedPropsFromObj, getSelectedAttributesFromSchema } from '../../../../utils'
+
+const isCollection = (value) => Array.isArray(value) && value.length > 0 && typeof value[0] === 'object'
+
+const handleObjectField = (acc, fieldKey, fieldValue, relations) => {
+  if (relations.includes(fieldKey)) {
+    Object.keys(fieldValue).forEach((key) =>
+      acc.push({
+        field: `${fieldKey}.${key}`,
+        searchable: true
+      })
+    )
+  }
+}
+
+const handleCollectionField = (acc, fieldKey, fieldValue, relations) => {
+  if (relations.includes(fieldKey)) {
+    acc.push({
+      field: fieldKey,
+      searchable: false
+    })
+  }
+}
 
 const generateSelectableAttributesFromSchema = ({ schema, relations }) => {
+  const handlers = {
+    object: handleObjectField,
+    collection: handleCollectionField
+  }
+
   return Object.entries(schema).reduce((acc, [fieldKey, fieldValue]) => {
-    if (typeof fieldValue === 'object') {
-      if (relations.includes(fieldKey)) {
-        Object.keys(fieldValue).forEach((key) => acc.push(`${fieldKey}.${key}`))
-      }
-    } else {
-      acc.push(fieldKey)
+    const fieldType = fieldValue === 'collection' ? 'collection' : typeof fieldValue
+
+    if (fieldType in handlers) {
+      handlers[fieldType](acc, fieldKey, fieldValue, relations)
+    } else if (!isCollection(fieldValue)) {
+      acc.push({
+        field: fieldKey,
+        searchable: true
+      })
     }
+
     return acc
   }, [])
 }
@@ -29,9 +76,9 @@ const SchemaMapper = ({ collection, contentTypeSchema, onSchemaChange }) => {
   })
 
   React.useEffect(() => {
-    const schema = getSchemaFromAttributes({
-      attributes: selectedAttributes,
-      schema: contentTypeSchema
+    const schema = getSelectedPropsFromObj({
+      props: selectedAttributes,
+      obj: contentTypeSchema
     })
 
     onSchemaChange({ schema, searchableAttributes })
@@ -73,8 +120,12 @@ const SchemaMapper = ({ collection, contentTypeSchema, onSchemaChange }) => {
       setSelectedAttributes([])
       setSearchableAttributes([])
     } else {
-      setSelectedAttributes(schemaAttributes)
+      setSelectedAttributes(schemaAttributes.map((field) => field.field))
     }
+  }
+
+  const handleDocumentationRedirect = () => {
+    window.open('https://docs.orama.com/cloud/data-sources/native-integrations/strapi', '_blank', 'noopener')
   }
 
   return (
@@ -88,50 +139,100 @@ const SchemaMapper = ({ collection, contentTypeSchema, onSchemaChange }) => {
         </Typography>
       </Flex>
       <Box>
-        <Table colCount={3} rowCount={schemaAttributes.length}>
-          <Thead>
-            <Tr>
-              <Th>
-                <Checkbox
-                  aria-label="Select all entries"
-                  checked={selectedAttributes.length === schemaAttributes.length}
-                  onChange={() => selectAllAttributes()}
-                />
-              </Th>
-              <Th style={{ minWidth: '300px' }}>
-                <Typography variant="sigma">Attribute</Typography>
-              </Th>
-              <Th>
-                <div
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'flex-end',
-                    width: '100%'
-                  }}
-                >
-                  <Typography variant="sigma">Searchable</Typography>
-                </div>
-              </Th>
-            </Tr>
-          </Thead>
-          <Tbody>
-            {schemaAttributes.map((field) => (
-              <Tr key={field}>
-                <Td>
-                  <Checkbox checked={isChecked(field)} onChange={() => handleCheck(field)} />
-                </Td>
-                <Td onClick={() => handleCheck(field)} style={{ cursor: 'pointer' }}>
-                  <Typography textColor="neutral800">{field}</Typography>
-                </Td>
-                <Td>
-                  <Flex justifyContent="flex-end">
-                    <Switch selected={isSearchableSelected(field)} onChange={() => handleSearchable(field)} />
-                  </Flex>
-                </Td>
+        {/*TODO: style this*/}
+        {collection.hasSettings && (
+          <Typography variant="omega">
+            This is handled by the Orama Cloud plugin settings, under{' '}
+            <code
+              style={{
+                color: 'orange'
+              }}
+            >
+              config/plugins.js
+            </code>{' '}
+            directory.
+          </Typography>
+        )}
+        {!collection.hasSettings && (
+          <Table colCount={3} rowCount={schemaAttributes.length}>
+            <Thead>
+              <Tr>
+                <Th>
+                  <Checkbox
+                    aria-label="Select all entries"
+                    checked={selectedAttributes.length === schemaAttributes.length}
+                    onChange={() => selectAllAttributes()}
+                  />
+                </Th>
+                <Th style={{ minWidth: '300px' }}>
+                  <Typography variant="sigma">Attribute</Typography>
+                </Th>
+                <Th>
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'flex-end',
+                      width: '100%'
+                    }}
+                  >
+                    <Typography variant="sigma">Searchable</Typography>
+                  </div>
+                </Th>
               </Tr>
-            ))}
-          </Tbody>
-        </Table>
+            </Thead>
+            <Tbody>
+              {schemaAttributes.map(({ field, searchable }) => (
+                <Tr key={field}>
+                  <Td>
+                    <Checkbox checked={isChecked(field)} onChange={() => handleCheck(field)} />
+                  </Td>
+                  <Td
+                    onClick={() => onCheck(field)}
+                    style={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                  >
+                    <Typography textColor="neutral800">{field}</Typography>
+                    {!searchable && (
+                      <>
+                        <Tooltip
+                          position="right"
+                          label="You need to transform this attribute's data. Click for more info."
+                        >
+                          <Status
+                            variant="primary"
+                            size="S"
+                            showBullet={false}
+                            style={{ marginLeft: 10 }}
+                            onClick={handleDocumentationRedirect}
+                          >
+                            <div
+                              style={{
+                                display: 'flex',
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                columnGap: '5px'
+                              }}
+                            >
+                              <WarningIcon size={12} fill="#ddaa00" />
+                              <Typography variant="pi">Action required</Typography>
+                            </div>
+                          </Status>
+                        </Tooltip>
+                      </>
+                    )}
+                  </Td>
+                  <Td>
+                    <Flex justifyContent="flex-end">
+                      {searchable && (
+                        <Switch selected={isSearchableSelected(field)} onChange={() => handleSearchable(field)} />
+                      )}
+                    </Flex>
+                  </Td>
+                </Tr>
+              ))}
+            </Tbody>
+          </Table>
+        )}
       </Box>
     </Box>
   )
