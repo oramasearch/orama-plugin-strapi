@@ -13,19 +13,19 @@ seamless search capabilities.
 **npm**
 
  ```sh
-    npm install @oramacloud/strapi-plugin
+    npm install @oramacloud/plugin-strapi
  ```
 
 **yarn**
 
  ```sh
-    yarn add @oramacloud/strapi-plugin
+    yarn add @oramacloud/plugin-strapi
  ```
 
 **pnpm**
 
  ```sh
-    pnpm add @oramacloud/strapi-plugin
+    pnpm add @oramacloud/plugin-strapi
  ```
 
 ### Installation (via Strapi Marketplace)
