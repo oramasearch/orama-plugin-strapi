@@ -107,12 +107,8 @@ const SchemaMapper = ({ collection, contentTypeSchema, onSchemaChange }) => {
       setSelectedAttributes([])
       setSearchableAttributes([])
     } else {
-      setSelectedAttributes(schemaAttributes.map((field) => field.field))
+      setSelectedAttributes(schemaAttributes)
     }
-  }
-
-  const handleDocumentationRedirect = () => {
-    window.open('https://docs.orama.com/cloud/data-sources/native-integrations/strapi', '_blank', 'noopener')
   }
 
   return (
@@ -188,60 +184,9 @@ const SchemaMapper = ({ collection, contentTypeSchema, onSchemaChange }) => {
                   </Flex>
                 </Td>
               </Tr>
-            </Thead>
-            <Tbody>
-              {schemaAttributes.map(({ field, searchable }) => (
-                <Tr key={field}>
-                  <Td>
-                    <Checkbox checked={isChecked(field)} onChange={() => handleCheck(field)} />
-                  </Td>
-                  <Td
-                    onClick={() => onCheck(field)}
-                    style={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}
-                  >
-                    <Typography textColor="neutral800">{field}</Typography>
-                    {!searchable && (
-                      <>
-                        <Tooltip
-                          position="right"
-                          label="You need to transform this attribute's data. Click for more info."
-                        >
-                          <Status
-                            variant="primary"
-                            size="S"
-                            showBullet={false}
-                            style={{ marginLeft: 10 }}
-                            onClick={handleDocumentationRedirect}
-                          >
-                            <div
-                              style={{
-                                display: 'flex',
-                                flexDirection: 'row',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                columnGap: '5px'
-                              }}
-                            >
-                              <WarningIcon size={12} fill="#ddaa00" />
-                              <Typography variant="pi">Action required</Typography>
-                            </div>
-                          </Status>
-                        </Tooltip>
-                      </>
-                    )}
-                  </Td>
-                  <Td>
-                    <Flex justifyContent="flex-end">
-                      {searchable && (
-                        <Switch selected={isSearchableSelected(field)} onChange={() => handleSearchable(field)} />
-                      )}
-                    </Flex>
-                  </Td>
-                </Tr>
-              ))}
-            </Tbody>
-          </Table>
-        )}
+            ))}
+          </Tbody>
+        </Table>
       </Box>
     </Box>
   )

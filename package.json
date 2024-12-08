@@ -30,7 +30,7 @@
   },
   "files": ["dist"],
   "scripts": {
-    "build": "strapi-plugin build",
+    "build": "rm -rf dist && strapi-plugin build",
     "postbuild": "rm -rf dist/server && webpack",
     "test": "jest --collect-coverage",
     "format": "biome format --write ."
