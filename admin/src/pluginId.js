@@ -1,3 +1,1 @@
-const pluginId = 'orama-cloud'
-
-export default pluginId
+export const PLUGIN_ID = 'orama-cloud'
