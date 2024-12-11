@@ -73,9 +73,8 @@ module.exports = ({ strapi }) => {
           .updateWithoutHooks(collection.id, {
             status: 'outdated'
           })
-          .then((updatedCollections) => {
-            oramaService.processScheduledUpdate(updatedCollections[0])
-          })
+
+        oramaService.processScheduledUpdate(collection)
       }
     }
   }

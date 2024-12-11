@@ -293,9 +293,7 @@ class OramaManager {
    * Triggered by Admin UI 'Deploy' CTA
    * @param {Object} collection - Collection object
    * */
-  async deployIndex({ id }) {
-    const collection = await this.collectionService.findOne(id)
-
+  async deployIndex(collection) {
     this.strapi.log.debug(
       `Processing scheduled index update for ${collection.entity} with indexId ${collection.indexId}`
     )
@@ -320,9 +318,7 @@ class OramaManager {
    * @param {Object} record - Record object
    * @param {string} action - Action triggered (insert, update, delete)
    * */
-  async processLiveUpdate({ id }, record, action) {
-    const collection = await this.collectionService.findOne(id)
-
+  async processLiveUpdate(collection, record, action) {
     if (!this.validate(collection)) {
       return
     }
@@ -352,9 +348,7 @@ class OramaManager {
    * Triggered by the afterCreate, afterUpdate, afterDelete collection lifecycle hooks
    * @param {Object} collection - Collection object
    * */
-  async processScheduledUpdate({ id }) {
-    const collection = await this.collectionService.findOne(id)
-
+  async processScheduledUpdate(collection) {
     if (!this.validate(collection)) {
       return
     }

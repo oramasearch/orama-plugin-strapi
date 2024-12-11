@@ -1,10 +1,10 @@
-'use strict'
+"use strict"
 
 module.exports = ({ strapi }) => {
-  const oramaService = strapi.plugin('orama-cloud').service('oramaManagerService')
-  const collectionService = strapi.plugin('orama-cloud').service('collectionsService')
-  const cronService = strapi.plugin('orama-cloud').service('cronService')
-  const hookManagerService = strapi.plugin('orama-cloud').service('hookManagerService')
+  const oramaService = strapi.plugin("orama-cloud").service("oramaManagerService")
+  const collectionService = strapi.plugin("orama-cloud").service("collectionsService")
+  const cronService = strapi.plugin("orama-cloud").service("cronService")
+  const hookManagerService = strapi.plugin("orama-cloud").service("hookManagerService")
 
   return {
     registerLifecycleHooks(collection) {
@@ -19,26 +19,20 @@ module.exports = ({ strapi }) => {
       hookManagerService.unregisterHooks(collection)
       hookManagerService.registerHooks(collection, {
         async afterCreate(event) {
-          await handleLiveUpdates(event, 'create')
+          await handleLiveUpdates(event, "create")
         },
         async afterUpdate(event) {
-          await handleLiveUpdates(event, 'update')
+          await handleLiveUpdates(event, "update")
         },
         async afterDelete(event) {
-          await handleLiveUpdates(event, 'delete')
+          await handleLiveUpdates(event, "delete")
         }
       })
 
       async function handleLiveUpdates(event, action) {
         const { result } = event
 
-        await collectionService
-          .updateWithoutHooks(collection.id, {
-            status: 'outdated'
-          })
-          .then((updatedCollections) => {
-            oramaService.processLiveUpdate(updatedCollections[0], result, action)
-          })
+        oramaService.processLiveUpdate(collection, result, action)
       }
     }
   }

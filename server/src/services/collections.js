@@ -121,9 +121,7 @@ module.exports = ({ strapi }) => {
         throw new Error(`Collection with documentId ${documentId} not found`)
       }
 
-      await this.updateWithoutHooks(collection.id, { status: 'outdated' })
-
-      strapi.plugin('orama-cloud').service('oramaManagerService').deployIndex({ documentId })
+      strapi.plugin('orama-cloud').service('oramaManagerService').deployIndex(collection)
     }
   }
 }
