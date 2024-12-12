@@ -34,7 +34,8 @@
     "postbuild": "rm -rf dist/server && webpack",
     "watch:server": "rm -rf dist/server && webpack -w",
     "test": "jest --collect-coverage",
-    "format": "biome format --write ."
+    "format": "biome format --write .",
+    "release": "pnpm build && pnpm publish"
   },
   "dependencies": {
     "@oramacloud/client": "^2.1.4",
