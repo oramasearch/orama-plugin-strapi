@@ -1,6 +1,6 @@
 {
   "name": "@oramacloud/plugin-strapi",
-  "version": "2.0.0-rc.1",
+  "version": "2.0.0-rc.2",
   "description": "A Strapi plugin to integrate Orama Cloud's search and answers engine, providing seamless search capabilities within your Strapi application.",
   "keywords": ["strapi", "plugin", "search", "answers", "orama", "cloud"],
   "license": "MIT",
