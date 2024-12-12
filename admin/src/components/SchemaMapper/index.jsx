@@ -232,7 +232,7 @@ const SchemaMapper = ({ collection, contentTypeSchema, onSchemaChange }) => {
                   <Td>
                     <Flex justifyContent="flex-end">
                       {searchable && (
-                        <Switch selected={isSearchableSelected(field)} onClick={() => handleSearchable(field)} />
+                        <Switch checked={isSearchableSelected(field)} onClick={() => handleSearchable(field)} />
                       )}
                     </Flex>
                   </Td>
