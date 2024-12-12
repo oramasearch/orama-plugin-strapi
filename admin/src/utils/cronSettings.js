@@ -11,6 +11,17 @@ const cronSettings = [
   //     },
   // },
   {
+    value: '*/3 * * * *',
+    description: 'Every 3 minutes',
+    label: 'Every 3 minutes',
+    getNextRun: () => {
+      const now = new Date()
+      const nextRun = new Date(now.getTime() + (3 - (now.getMinutes() % 3)) * 60 * 1000)
+      nextRun.setSeconds(0, 0)
+      return nextRun
+    }
+  },
+  {
     value: '*/30 * * * *',
     description: 'Every 30 minutes',
     label: 'Every 30 minutes',
