@@ -3,9 +3,9 @@ const mockCollection = {
   entity: 'testEntity',
   indexId: 'testIndexId',
   status: 'outdated',
-  searchableAttributes: ['name', 'description'],
+  searchableAttributes: ['title', 'description'],
   schema: {
-    name: { type: 'string' },
+    title: { type: 'string' },
     description: { type: 'string' }
   },
   includedRelations: ['relation1', 'relation2']

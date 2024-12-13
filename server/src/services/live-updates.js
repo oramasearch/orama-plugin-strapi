@@ -19,7 +19,7 @@ module.exports = ({ strapi }) => {
       hookManagerService.unregisterHooks(collection)
       hookManagerService.registerHooks(collection, {
         async afterCreate(event) {
-          await handleLiveUpdates(event, 'create')
+          await handleLiveUpdates(event, 'insert')
         },
         async afterUpdate(event) {
           await handleLiveUpdates(event, 'update')

@@ -93,13 +93,14 @@ module.exports = ({ strapi }) => {
       }))
     },
 
-    async getEntries({ contentType, relations = [], schema, offset = 0, limit = 50 }) {
+    async getEntries({ contentType, relations = [], schema, offset = 0, limit = 50, where }) {
       const selectedRelations = getSelectedRelations({ schema, relations })
       const selectedFields = getSelectedFieldsConfigObj(schema)
 
       return await strapi.query(contentType).findMany({
         populate: selectedRelations,
         select: selectedFields,
+        ...(where ? { where } : {}),
         limit,
         offset
       })

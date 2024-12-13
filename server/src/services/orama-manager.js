@@ -3,6 +3,16 @@
 const { CloudManager } = require('@oramacloud/client')
 const { getSelectedPropsFromObj } = require('../../../utils')
 
+const getAssociatedActionName = (action) => {
+  const actionMap = {
+    insert: 'upsert',
+    update: 'upsert',
+    delete: 'delete'
+  }
+
+  return actionMap[action]
+}
+
 class OramaManager {
   constructor({ strapi }) {
     this.strapi = strapi
@@ -13,8 +23,7 @@ class OramaManager {
 
     this.oramaCloudManager = new CloudManager({ api_key: this.privateApiKey })
     this.DocumentActionsMap = {
-      create: this.oramaInsert.bind(this),
-      update: this.oramaUpdate.bind(this),
+      upsert: this.oramaUpsert.bind(this),
       delete: this.oramaDelete.bind(this)
     }
   }
@@ -153,9 +162,11 @@ class OramaManager {
     })
 
     if (entries.length > 0) {
-      await this.oramaInsert({
-        indexId: collection.indexId,
-        entries
+      await this.oramaUpsert({
+        collection,
+        entries,
+        action: 'insert',
+        isFromBulk: true
       })
 
       return await this.bulkInsert(collection, offset + entries.length)
@@ -175,45 +186,38 @@ class OramaManager {
   }
 
   /*
-   * Inserts new documents into the index in the Orama Cloud using the OramaCloud SDK
-   * Formats data before insertion using the documentsTransformer function, if provided
-   * @param {string} indexId - Index ID
-   * @param {Array} entries - Array of entries
-   * */
-  async oramaInsert({ indexId, entries }) {
-    const index = this.oramaCloudManager.index(indexId)
-    const transformedData = this.documentsTransformer(indexId, entries)
-
-    if (!transformedData) {
-      this.strapi.log.error(`ERROR: documentsTransformer needs a return value`)
-      return false
-    }
-
-    const result = await index.insert(transformedData)
-
-    this.strapi.log.info(`INSERT: documents with id ${transformedData.map(({ id }) => id)} into index ${indexId}`)
-
-    return result
-  }
-
-  /*
    * Updates documents of the specified index in the Orama Cloud using the OramaCloud SDK
    * Formats data before insertion using the documentsTransformer function, if provided
    * @param {string} indexId - Index ID
    * @param {Array} entries - Array of entries
    * */
-  async oramaUpdate({ indexId, entries }) {
+  async oramaUpsert({ collection: { indexId, entity, schema, includedRelations }, action, entries, isFromBulk }) {
+    let filteredEntries = entries
     const index = this.oramaCloudManager.index(indexId)
-    const transformedData = this.documentsTransformer(indexId, entries)
+
+    if (!isFromBulk) {
+      filteredEntries = await this.contentTypesService.getEntries({
+        contentType: entity,
+        relations: includedRelations,
+        schema: schema,
+        where: {
+          id: {
+            $in: entries.map(({ id }) => id)
+          }
+        }
+      })
+    }
+
+    const transformedData = this.documentsTransformer(indexId, filteredEntries)
 
     if (!transformedData) {
       this.strapi.log.error(`ERROR: documentsTransformer needs a return value`)
       return false
     }
 
-    const result = await index.update(transformedData)
+    const result = await index[action](transformedData)
 
-    this.strapi.log.info(`UPDATE: document with id ${transformedData.map(({ id }) => id)} into index ${indexId}`)
+    this.strapi.log.info(`${action.toUpperCase()}: document with id ${transformedData.map(({ id }) => id)} into index ${indexId}`)
 
     return result
   }
@@ -223,7 +227,7 @@ class OramaManager {
    * @param {string} indexId - Index ID
    * @param {Array} entries - Array of entries
    * */
-  async oramaDelete({ indexId, entries }) {
+  async oramaDelete({ collection: { indexId }, entries }) {
     const index = this.oramaCloudManager.index(indexId)
     const result = await index.delete(entries.map(({ id }) => id))
 
@@ -239,14 +243,18 @@ class OramaManager {
    * @param {Object} record - Record object
    * @param {string} action - Action to perform (insert, update, delete)
    * */
-  async handleDocument({ indexId, record, action }) {
-    if (!action || !record || !this.DocumentActionsMap[action]) {
+  async handleDocument({ collection, record, action }) {
+    const associatedActionName = getAssociatedActionName(action)
+
+    if (!action || !record || !this.DocumentActionsMap[associatedActionName]) {
+      this.strapi.log.warn(`Action ${action} not found. Skipping...`)
+
       return false
     }
 
     const { createdBy, updatedBy, ...rest } = record
 
-    return await this.DocumentActionsMap[action]({ indexId, entries: [{ ...rest, id: rest.id.toString() }] })
+    return await this.DocumentActionsMap[associatedActionName]({ collection, action, entries: [{ ...rest, id: rest.id.toString() }] })
   }
 
   /*
@@ -302,7 +310,21 @@ class OramaManager {
       return
     }
 
+    const customSchema = this.collectionSettings?.[collection.indexId]?.schema
+
+    const oramaSchema =
+      customSchema ??
+      getSelectedPropsFromObj({
+        props: collection.searchableAttributes,
+        obj: collection.schema
+      })
+
     await this.updatingStarted(collection)
+
+    await this.oramaUpdateSchema({
+      indexId: collection.indexId,
+      schema: oramaSchema
+    })
 
     await this.oramaDeployIndex(collection)
 
@@ -328,7 +350,7 @@ class OramaManager {
     await this.updatingStarted(collection)
 
     const handleDocumentResult = await this.handleDocument({
-      indexId: collection.indexId,
+      collection,
       record,
       action
     })

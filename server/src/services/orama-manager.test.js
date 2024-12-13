@@ -20,6 +20,7 @@ const strapi = {
   log: {
     error: jest.fn(),
     debug: jest.fn(),
+    warn: jest.fn(),
     info: jest.fn()
   }
 }
@@ -242,15 +243,17 @@ describe('OramaManager', () => {
 
   describe('bulkInsert', () => {
     it('should insert entries', async () => {
-      const oramaInsertSpy = jest.spyOn(oramaManager, 'oramaInsert').mockResolvedValue()
+      const oramaUpsertSpy = jest.spyOn(oramaManager, 'oramaUpsert').mockResolvedValue()
       const bulkInsertSpy = jest.spyOn(oramaManager, 'bulkInsert')
 
       await oramaManager.bulkInsert(mockCollection)
 
       expect(bulkInsertSpy).toHaveBeenNthCalledWith(1, mockCollection)
-      expect(oramaInsertSpy).toHaveBeenCalledWith({
-        indexId: mockCollection.indexId,
-        entries: [{ id: 1, title: 'Test Entry' }]
+      expect(oramaUpsertSpy).toHaveBeenCalledWith({
+        collection: mockCollection,
+        entries: [{ id: 1, title: 'Test Entry' }],
+        action: 'insert',
+        isFromBulk: true
       })
       expect(bulkInsertSpy).toHaveBeenLastCalledWith(mockCollection, 1)
     })
@@ -266,14 +269,16 @@ describe('OramaManager', () => {
     })
   })
 
-  describe('oramaInsert', () => {
+  describe('oramaUpsert - insert', () => {
     it('should insert entries', async () => {
       const documentsTransformerSpy = jest.spyOn(oramaManager, 'documentsTransformer')
       const { insert } = new CloudManager({ strapi }).index()
 
-      await oramaManager.oramaInsert({
-        indexId: mockCollection.indexId,
-        entries: [{ id: 1, title: 'Test Entry' }]
+      await oramaManager.oramaUpsert({
+        collection: mockCollection,
+        entries: [{ id: 1, title: 'Test Entry' }],
+        action: 'insert',
+        isFromBulk: true
       })
 
       expect(insert).toHaveBeenCalledWith([{ id: 1, title: 'Test Entry' }])
@@ -296,9 +301,11 @@ describe('OramaManager', () => {
       const documentsTransformerSpy = jest.spyOn(oramaManager, 'documentsTransformer')
       const { insert } = new CloudManager({ strapi }).index()
 
-      await oramaManager.oramaInsert({
-        indexId: mockCollection.indexId,
-        entries: [{ id: 1, title: 'Test Entry' }]
+      await oramaManager.oramaUpsert({
+        collection: mockCollection,
+        entries: [{ id: 1, title: 'Test Entry' }],
+        action: 'insert',
+        isFromBulk: true
       })
 
       expect(documentsTransformerSpy).toHaveBeenCalledWith(mockCollection.indexId, [{ id: 1, title: 'Test Entry' }])
@@ -314,13 +321,18 @@ describe('OramaManager', () => {
     })
   })
 
-  describe('oramaUpdate', () => {
+  describe('oramaUpsert - update', () => {
+    beforeEach(() => {
+      contentTypesService.getEntries.mockResolvedValue([{ id: 1, title: 'Test Entry' }])
+    })
+
     it('should update entries', async () => {
       const { update } = new CloudManager({ strapi }).index()
 
-      await oramaManager.oramaUpdate({
-        indexId: mockCollection.indexId,
-        entries: [{ id: 1, title: 'Test Entry' }]
+      await oramaManager.oramaUpsert({
+        collection: mockCollection,
+        entries: [{ id: 1, title: 'Test Entry' }],
+        action: 'update'
       })
 
       expect(update).toHaveBeenCalledWith([{ id: 1, title: 'Test Entry' }])
@@ -328,7 +340,11 @@ describe('OramaManager', () => {
   })
 
   describe('handleDocument', () => {
-    it('should return if action is not found', async () => {
+    beforeEach(() => {
+      contentTypesService.getEntries.mockResolvedValue([{ id: 1, title: 'Test Entry' }])
+    })
+
+    it('should return false if action is not found', async () => {
       const { insert } = new CloudManager({ strapi }).index()
 
       await oramaManager.handleDocument({
@@ -358,36 +374,36 @@ describe('OramaManager', () => {
       const { insert } = new CloudManager({ strapi }).index()
 
       await oramaManager.handleDocument({
-        indexId: mockCollection.indexId,
+        collection: mockCollection,
         record: mockedTestRecord,
-        action: 'create'
+        action: 'insert',
       })
 
-      expect(insert).toHaveBeenCalledWith([{ id: '1', title: 'Test Entry' }])
+      expect(insert).toHaveBeenCalledWith([{ id: 1, title: 'Test Entry' }])
     })
 
     it('should return if action is update', async () => {
       const { update } = new CloudManager({ strapi }).index()
 
       await oramaManager.handleDocument({
-        indexId: mockCollection.indexId,
+        collection: mockCollection,
         record: mockedTestRecord,
         action: 'update'
       })
 
-      expect(update).toHaveBeenCalledWith([{ id: '1', title: 'Test Entry' }])
+      expect(update).toHaveBeenCalledWith([{ id: 1, title: 'Test Entry' }])
     })
 
     it('should return if action is delete', async () => {
       const { delete: deleteFn } = new CloudManager({ strapi }).index()
 
       await oramaManager.handleDocument({
-        indexId: mockCollection.indexId,
+        collection: mockCollection,
         record: mockedTestRecord,
         action: 'delete'
       })
 
-      expect(deleteFn).toHaveBeenCalledWith(['1'])
+      expect(deleteFn).toHaveBeenCalledWith(["1"])
     })
   })
 
@@ -465,14 +481,14 @@ describe('OramaManager', () => {
 
     describe('processLiveUpdate', () => {
       it('should process live update', async () => {
-        await oramaManager.processLiveUpdate(mockCollection, mockedTestRecord, 'create')
+        await oramaManager.processLiveUpdate(mockCollection, mockedTestRecord, 'insert')
 
         expect(oramaManager.validate).toHaveBeenCalledWith(mockCollection)
         expect(updatingStartedSpy).toHaveBeenCalledWith(mockCollection)
         expect(handleDocumentSpy).toHaveBeenCalledWith({
-          indexId: mockCollection.indexId,
+          collection: mockCollection,
           record: mockedTestRecord,
-          action: 'create'
+          action: 'insert'
         })
         expect(setOutdatedSpy).toHaveBeenCalledWith(mockCollection)
       })
@@ -480,7 +496,7 @@ describe('OramaManager', () => {
       it('should not process live update if collection is not valid', async () => {
         collectionService.findOne.mockReturnValueOnce(mockNotValidCollection)
 
-        await oramaManager.processLiveUpdate(mockNotValidCollection, mockedTestRecord, 'create')
+        await oramaManager.processLiveUpdate(mockNotValidCollection, mockedTestRecord, 'insert')
 
         expect(oramaManager.validate).toHaveBeenCalledWith(mockNotValidCollection)
         expect(updatingStartedSpy).not.toHaveBeenCalled()
@@ -494,7 +510,7 @@ describe('OramaManager', () => {
         //Force handleDocument to reject
         handleDocumentSpy.mockResolvedValueOnce(false)
 
-        await oramaManager.processLiveUpdate(mockCollection, mockedTestRecord, 'create')
+        await oramaManager.processLiveUpdate(mockCollection, mockedTestRecord, 'insert')
 
         expect(oramaManager.validate).toHaveBeenCalledWith(mockCollection)
         expect(updatingStartedSpy).toHaveBeenCalled()
