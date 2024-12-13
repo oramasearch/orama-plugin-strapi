@@ -176,6 +176,27 @@ class OramaManager {
   }
 
   /*
+  * Updates the schema of a collection in the Orama Cloud using the OramaCloud SDK.
+  * Fetches schema from the collection settings if provided, otherwise uses the searchableAttributes from the collection schema.
+  * @param {Object} collection - Collection object
+  * */
+  async updateSchema(collection) {
+    const customSchema = this.collectionSettings?.[collection.indexId]?.schema
+
+    const oramaSchema =
+      customSchema ??
+      getSelectedPropsFromObj({
+        props: collection.searchableAttributes,
+        obj: collection.schema
+      })
+
+    await this.oramaUpdateSchema({
+      indexId: collection.indexId,
+      schema: oramaSchema
+    })
+  }
+
+  /*
    * Updates the schema of an index in the Orama Cloud using the OramaCloud SDK
    * @param {string} indexId - Index ID
    * @param {Object} schema - Schema object
@@ -269,23 +290,11 @@ class OramaManager {
       return
     }
 
-    const customSchema = this.collectionSettings?.[collection.indexId]?.schema
-
-    const oramaSchema =
-      customSchema ??
-      getSelectedPropsFromObj({
-        props: collection.searchableAttributes,
-        obj: collection.schema
-      })
-
     await this.updatingStarted(collection)
 
     await this.resetIndex(collection)
 
-    await this.oramaUpdateSchema({
-      indexId: collection.indexId,
-      schema: oramaSchema
-    })
+    await this.updateSchema(collection)
 
     const { documents_count } = await this.bulkInsert(collection)
 
@@ -310,21 +319,9 @@ class OramaManager {
       return
     }
 
-    const customSchema = this.collectionSettings?.[collection.indexId]?.schema
-
-    const oramaSchema =
-      customSchema ??
-      getSelectedPropsFromObj({
-        props: collection.searchableAttributes,
-        obj: collection.schema
-      })
-
     await this.updatingStarted(collection)
 
-    await this.oramaUpdateSchema({
-      indexId: collection.indexId,
-      schema: oramaSchema
-    })
+    await this.updateSchema(collection)
 
     await this.oramaDeployIndex(collection)
 
@@ -383,7 +380,13 @@ class OramaManager {
 
     await this.resetIndex(collection)
 
+    await this.updateSchema(collection)
+
     const { documents_count } = await this.bulkInsert(collection)
+
+    if (documents_count > 0) {
+      await this.oramaDeployIndex(collection)
+    }
 
     await this.updatingCompleted(collection, documents_count)
 
