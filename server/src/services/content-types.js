@@ -33,7 +33,7 @@ const isValidType = (type) => {
   return !['component', 'media', 'blocks', 'json', 'password'].includes(type)
 }
 
-const isIgnoredAttribute = (attribute) => ['publishedAt', 'createdAt', 'updatedAt'].includes(attribute.name)
+const isIgnoredAttribute = (attribute) => ['publishedAt', 'createdAt', 'updatedAt', 'locale', 'localizations'].includes(attribute.name)
 
 const isValidRelation = ({ attribute, includedRelations }) => {
   return (
