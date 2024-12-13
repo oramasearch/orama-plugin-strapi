@@ -176,10 +176,10 @@ class OramaManager {
   }
 
   /*
-  * Updates the schema of a collection in the Orama Cloud using the OramaCloud SDK.
-  * Fetches schema from the collection settings if provided, otherwise uses the searchableAttributes from the collection schema.
-  * @param {Object} collection - Collection object
-  * */
+   * Updates the schema of a collection in the Orama Cloud using the OramaCloud SDK.
+   * Fetches schema from the collection settings if provided, otherwise uses the searchableAttributes from the collection schema.
+   * @param {Object} collection - Collection object
+   * */
   async updateSchema(collection) {
     const customSchema = this.collectionSettings?.[collection.indexId]?.schema
 
@@ -238,7 +238,9 @@ class OramaManager {
 
     const result = await index[action](transformedData)
 
-    this.strapi.log.info(`${action.toUpperCase()}: document with id ${transformedData.map(({ id }) => id)} into index ${indexId}`)
+    this.strapi.log.info(
+      `${action.toUpperCase()}: document with id ${transformedData.map(({ id }) => id)} into index ${indexId}`
+    )
 
     return result
   }
@@ -275,7 +277,11 @@ class OramaManager {
 
     const { createdBy, updatedBy, ...rest } = record
 
-    return await this.DocumentActionsMap[associatedActionName]({ collection, action, entries: [{ ...rest, id: rest.id.toString() }] })
+    return await this.DocumentActionsMap[associatedActionName]({
+      collection,
+      action,
+      entries: [{ ...rest, id: rest.id.toString() }]
+    })
   }
 
   /*

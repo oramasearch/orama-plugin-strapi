@@ -376,7 +376,7 @@ describe('OramaManager', () => {
       await oramaManager.handleDocument({
         collection: mockCollection,
         record: mockedTestRecord,
-        action: 'insert',
+        action: 'insert'
       })
 
       expect(insert).toHaveBeenCalledWith([{ id: 1, title: 'Test Entry' }])
@@ -403,7 +403,7 @@ describe('OramaManager', () => {
         action: 'delete'
       })
 
-      expect(deleteFn).toHaveBeenCalledWith(["1"])
+      expect(deleteFn).toHaveBeenCalledWith(['1'])
     })
   })
 
