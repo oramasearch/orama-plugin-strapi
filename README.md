@@ -8,24 +8,35 @@
 This [Strapi](https://strapi.io/) plugin integrates Orama Cloud's search and answers engine into your Strapi application, providing
 seamless search capabilities.
 
-### Installation (via package manager)
+## Installation (via package manager)
 
-**npm**
+### v5
 
+* npm
  ```sh
-    npm install @oramacloud/plugin-strapi
+    npm install @oramacloud/plugin-strapi@latest
+ ```
+* yarn
+ ```sh
+    yarn add @oramacloud/plugin-strapi@latest
+ ```
+* pnpm
+ ```sh
+    pnpm add @oramacloud/plugin-strapi@latest
  ```
 
-**yarn**
-
+### v4
+* npm
  ```sh
-    yarn add @oramacloud/plugin-strapi
+    npm install @oramacloud/plugin-strapi@^1.0.0
  ```
-
-**pnpm**
-
+* yarn
  ```sh
-    pnpm add @oramacloud/plugin-strapi
+    yarn add @oramacloud/plugin-strapi@^1.0.0
+ ```
+* pnpm
+ ```sh
+    pnpm add @oramacloud/plugin-strapi@^1.0.0
  ```
 
 ### Installation (via Strapi Marketplace)
@@ -91,6 +102,7 @@ already in sync. You can always trigger a new deployment manually.
 <img src="https://raw.githubusercontent.com/askorama/orama-plugin-strapi/main/misc/assets/deploy.gif" alt="Manual deploy" width="600" />
 
 ---
+
 ## Advanced usage
 
 ### Documents transformation
