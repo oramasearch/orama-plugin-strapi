@@ -68,7 +68,7 @@ const CollectionForm = ({
                   </Field.Root>
                 </Box>
                 <Box>
-                  <Field.Root id="with_field" style={{ display: "flex", alignItems: "center" }}>
+                  <Field.Root id="with_field" style={{ display: 'flex', alignItems: 'center' }}>
                     <Field.Label>Include drafts?</Field.Label>
                     <Checkbox
                       checked={collection.includeDrafts}
