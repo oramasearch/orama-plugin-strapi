@@ -158,6 +158,11 @@ class OramaManager {
       contentType: collection.entity,
       relations: collection.includedRelations,
       schema: collection.schema,
+      ...(collection.includeDrafts === false && {
+        where: {
+          publishedAt: { $ne: null }
+        }
+      }),
       offset
     })
 
@@ -170,6 +175,8 @@ class OramaManager {
       })
 
       return await this.bulkInsert(collection, offset + entries.length)
+    } else if (offset === 0 && entries.length === 0) {
+      return { documents_count: 0, forceEmptyDeploy: true }
     }
 
     return { documents_count: offset }
@@ -212,7 +219,12 @@ class OramaManager {
    * @param {string} indexId - Index ID
    * @param {Array} entries - Array of entries
    * */
-  async oramaUpsert({ collection: { indexId, entity, schema, includedRelations }, action, entries, isFromBulk }) {
+  async oramaUpsert({
+    collection: { indexId, entity, schema, includedRelations, includeDrafts },
+    action,
+    entries,
+    isFromBulk
+  }) {
     let filteredEntries = entries
     const index = this.oramaCloudManager.index(indexId)
 
@@ -224,7 +236,10 @@ class OramaManager {
         where: {
           id: {
             $in: entries.map(({ id }) => id)
-          }
+          },
+          ...(includeDrafts === false && {
+            publishedAt: { $ne: null }
+          })
         }
       })
     }
@@ -302,9 +317,13 @@ class OramaManager {
 
     await this.updateSchema(collection)
 
-    const { documents_count } = await this.bulkInsert(collection)
+    const { documents_count, forceEmptyDeploy } = await this.bulkInsert(collection)
 
-    if (documents_count > 0) {
+    if (forceEmptyDeploy) {
+      this.strapi.log.debug(`No documents found for ${collection.entity}. Deploying empty index.`)
+      await this.resetIndex(collection)
+      await this.oramaDeployIndex(collection)
+    } else if (documents_count > 0) {
       await this.oramaDeployIndex(collection)
     }
 
@@ -322,6 +341,7 @@ class OramaManager {
     )
 
     if (!this.validate(collection)) {
+      this.strapi.log.error(`Collection not valid.`)
       return
     }
 

@@ -58,7 +58,7 @@ const HomePage = () => {
         console.error('Failed to load collections.', err)
         toggleNotification({
           type: 'warning',
-          defaultdefaultMessage: 'Failed to load collections.'
+          defaultMessage: 'Failed to load collections.'
         })
       })
 
@@ -69,7 +69,7 @@ const HomePage = () => {
         console.error('Failed to load collections.', err)
         toggleNotification({
           type: 'warning',
-          defaultdefaultMessage: 'Failed to load content types.'
+          defaultMessage: 'Failed to load content types.'
         })
       })
   }
@@ -93,6 +93,7 @@ const HomePage = () => {
       indexId: '',
       entity: undefined,
       includedRelations: [],
+      includeDrafts: false,
       searchableAttributes: [],
       schema: {},
       status: 'outdated',
@@ -278,7 +279,6 @@ const HomePage = () => {
               {isModalVisible && (
                 <Modal.Root
                   open={isModalVisible}
-                  style={{ maxWidth: '700px' }}
                   onOpenChange={(isOpen) => {
                     if (!isOpen) {
                       setIsModalVisible(false)
@@ -288,7 +288,7 @@ const HomePage = () => {
                   }}
                   labelledBy="edit-collection-modal"
                 >
-                  <Modal.Content>
+                  <Modal.Content style={{ maxWidth: '700px' }}>
                     <Modal.Header>
                       <Modal.Title>Edit Collection</Modal.Title>
                     </Modal.Header>

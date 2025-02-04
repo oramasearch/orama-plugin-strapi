@@ -1,5 +1,6 @@
 import {
   Box,
+  Checkbox,
   Divider,
   Field,
   Flex,
@@ -47,27 +48,39 @@ const CollectionForm = ({
           title: 'General',
           content: (
             <Flex direction="column" alignItems="flex-start" gap={6}>
-              <Box width="100%">
-                <Field.Root id="with_field">
-                  <Field.Label>Index ID</Field.Label>
-                  <TextInput
-                    required
-                    onChange={(e) => onFieldChange({ name: 'indexId', value: e.target.value })}
-                    label="Index ID"
-                    placeholder="Orama Cloud Index ID"
-                    name="indexId"
-                    id="indexId"
-                    hint="Your Orama Cloud Index ID. Go to Orama Dashboard > Indexes to find it."
-                    style={{ width: '100%' }}
-                    value={collection?.indexId}
-                  />
-                  <Field.Error />
-                  <Field.Hint />
-                </Field.Root>
-              </Box>
+              <Flex gap={4} style={{ width: '100%' }}>
+                <Box style={{ flexGrow: 1 }}>
+                  <Field.Root id="with_field" style={{ width: '100%' }}>
+                    <Field.Label>Index ID</Field.Label>
+                    <TextInput
+                      required
+                      onChange={(e) => onFieldChange({ name: 'indexId', value: e.target.value })}
+                      label="Index ID"
+                      placeholder="Orama Cloud Index ID"
+                      name="indexId"
+                      id="indexId"
+                      hint="Your Orama Cloud Index ID. Go to Orama Dashboard > Indexes to find it."
+                      style={{ width: '100%' }}
+                      value={collection?.indexId}
+                    />
+                    <Field.Error />
+                    <Field.Hint />
+                  </Field.Root>
+                </Box>
+                <Box>
+                  <Field.Root id="with_field" style={{ display: 'flex', alignItems: 'center' }}>
+                    <Field.Label>Include drafts?</Field.Label>
+                    <Checkbox
+                      checked={collection.includeDrafts}
+                      onClick={() => onFieldChange({ name: 'includeDrafts', value: !collection.includeDrafts })}
+                      style={{ margin: '8px 0px 10px' }}
+                    />
+                  </Field.Root>
+                </Box>
+              </Flex>
               <Flex alignItems="flex-start" justifyContent="space-between" style={{ width: '100%' }}>
                 <Flex style={{ width: '49%' }}>
-                  <Field.Root id="with_field">
+                  <Field.Root id="with_field" style={{ width: '100%' }}>
                     <Field.Label>Content Type</Field.Label>
                     <SingleSelect
                       required
@@ -77,6 +90,7 @@ const CollectionForm = ({
                       name="entity"
                       id="entity"
                       hint="Choose the Content Type you want to map with your index on Orama Cloud."
+                      style={{ width: '100%' }}
                       value={collection?.entity}
                     >
                       {contentTypeOptions?.length > 0 &&

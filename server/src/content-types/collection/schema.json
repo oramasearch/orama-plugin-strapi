@@ -38,6 +38,11 @@
       "type": "json",
       "required": false
     },
+    "includeDrafts": {
+      "type": "boolean",
+      "default": false,
+      "required": true
+    },
     "schema": {
       "type": "json",
       "required": true
