@@ -68,5 +68,42 @@ describe('contentTypesService', () => {
       })
       expect(entries).toEqual(mockEntries)
     })
+
+    it('should fetch only published entries if includeDrafts is false', async () => {
+      const mockEntries = [
+        { id: 1, title: 'Test Entry', author: { name: 'Author' }, publishedAt: '2021-01-01' },
+        { id: 2, title: 'Test Entry (draft)', author: { name: 'Mario' }, publishedAt: null }
+      ]
+      strapi.query().findMany.mockResolvedValue(mockEntries)
+
+      const params = {
+        contentType: 'api::blog-post.blog-post',
+        relations: ['author'],
+        schema: { title: 'string', author: { name: 'string' } },
+        where: {
+          publishedAt: {
+            $ne: null
+          }
+        },
+        offset: 0,
+        limit: 50
+      }
+
+      const entries = await contentTypesService.getEntries(params)
+
+      expect(strapi.query).toHaveBeenCalledWith('api::blog-post.blog-post')
+      expect(strapi.query().findMany).toHaveBeenCalledWith({
+        populate: { author: { select: ['name'] } },
+        select: ['id', 'title'],
+        where: {
+          publishedAt: {
+            $ne: null
+          }
+        },
+        limit: 50,
+        offset: 0
+      })
+      expect(entries).toEqual(mockEntries)
+    })
   })
 })
