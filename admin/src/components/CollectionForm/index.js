@@ -6,6 +6,7 @@ import {
   RadioGroup,
   SingleSelect,
   SingleSelectOption,
+  Checkbox,
   TextInput,
   Typography
 } from '@strapi/design-system'
@@ -47,19 +48,31 @@ const CollectionForm = ({
           title: 'General',
           content: (
             <Flex direction="column" alignItems="flex-start" gap={6}>
-              <Box width="100%">
-                <TextInput
-                  required
-                  onChange={(e) => onFieldChange({ name: 'indexId', value: e.target.value })}
-                  label="Index ID"
-                  placeholder="Orama Cloud Index ID"
-                  name="indexId"
-                  id="indexId"
-                  hint="Your Orama Cloud Index ID. Go to Orama Dashboard > Indexes to find it."
-                  style={{ width: '100%' }}
-                  value={collection?.indexId}
-                />
-              </Box>
+              <Flex gap={4} style={{ width: "100%" }}>
+                <Box style={{ flexGrow: 1 }}>
+                  <TextInput
+                    required
+                    onChange={(e) => onFieldChange({ name: 'indexId', value: e.target.value })}
+                    label="Index ID"
+                    placeholder="Orama Cloud Index ID"
+                    name="indexId"
+                    id="indexId"
+                    hint="Your Orama Cloud Index ID. Go to Orama Dashboard > Indexes to find it."
+                    style={{ width: '100%' }}
+                    value={collection?.indexId}
+                  />
+                </Box>
+                <Box>
+                  <Flex direction="column" alignItems="center">
+                    <Typography variant="beta" style={{ fontSize: "0.75rem" }}>Include drafts?</Typography>
+                    <Checkbox
+                      checked={collection.includeDrafts}
+                      onChange={() => onFieldChange({ name: 'includeDrafts', value: !collection.includeDrafts })}
+                      style={{ margin: '16px 0px 28px 0' }}
+                    />
+                  </Flex>
+                </Box>
+              </Flex>
               <Flex alignItems="flex-start" justifyContent="space-between" style={{ width: '100%' }}>
                 <Flex flexShrink={1} style={{ width: '49%' }}>
                   <SingleSelect

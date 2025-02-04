@@ -17,6 +17,7 @@
     "@strapi/design-system": "^1.6.3",
     "@strapi/helper-plugin": "^4.6.0",
     "@strapi/icons": "^1.6.3",
+    "luxon": "^3.5.0",
     "prop-types": "^15.7.2"
   },
   "devDependencies": {

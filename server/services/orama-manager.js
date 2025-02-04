@@ -149,6 +149,11 @@ class OramaManager {
       contentType: collection.entity,
       relations: collection.includedRelations,
       schema: collection.schema,
+      ...(collection.includeDrafts === false && {
+        where: {
+          publishedAt: { $ne: null }
+        }
+      }),
       offset
     })
 
@@ -159,6 +164,8 @@ class OramaManager {
       })
 
       return await this.bulkInsert(collection, offset + entries.length)
+    } else if (offset === 0 && entries.length === 0) {
+      return { documents_count: 0, forceEmptyDeploy: true }
     }
 
     return { documents_count: offset }
@@ -279,9 +286,13 @@ class OramaManager {
       schema: oramaSchema
     })
 
-    const { documents_count } = await this.bulkInsert(collection)
+    const { documents_count, forceEmptyDeploy } = await this.bulkInsert(collection)
 
-    if (documents_count > 0) {
+    if (forceEmptyDeploy) {
+      this.strapi.log.debug(`No documents found for ${collection.entity}. Deploying empty index.`)
+      await this.resetIndex(collection)
+      await this.oramaDeployIndex(collection)
+    } else if (documents_count > 0) {
       await this.oramaDeployIndex(collection)
     }
 

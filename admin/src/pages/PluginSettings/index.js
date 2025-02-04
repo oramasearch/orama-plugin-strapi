@@ -106,6 +106,7 @@ const HomePage = () => {
       indexId: '',
       entity: undefined,
       includedRelations: [],
+      includeDrafts: [],
       searchableAttributes: [],
       schema: {},
       status: 'outdated',
