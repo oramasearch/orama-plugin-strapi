@@ -63,7 +63,7 @@ const CollectionsTable = ({ collections, onEditAction, onDeployAction, onCreateA
                 <Typography variant="sigma">CONTENT TYPE</Typography>
               </Th>
               <Th>
-                <Typography variant="sigma">ORAMA INDEX ID</Typography>
+                <Typography variant="sigma">ORAMA DATASOURCE ID</Typography>
               </Th>
               <Th>
                 <Typography variant="sigma">STATUS</Typography>
@@ -94,18 +94,18 @@ const CollectionsTable = ({ collections, onEditAction, onDeployAction, onCreateA
                     </Status>
                   </Flex>
                 </Td>
-                {/* Index ID */}
+                {/* Datasource ID */}
                 <Td>
-                  {entry.indexId && (
+                  {entry.datasourceId && (
                     <LinkButton
-                      href={`https://cloud.orama.com/indexes/view/${entry.indexId}`}
+                      href={`https://cloud.orama.com/datasources/view/${entry.datasourceId}`}
                       isExternal
                       size="S"
                       variant="secondary"
                       style={{ whiteSpace: 'nowrap', textDecoration: 'none' }}
                       endIcon={<ExternalLink width={10} />}
                     >
-                      {entry.indexId}
+                      {entry.datasourceId}
                     </LinkButton>
                   )}
                 </Td>
@@ -169,7 +169,7 @@ const CollectionsTable = ({ collections, onEditAction, onDeployAction, onCreateA
           content="You don't have any collection yet."
           action={
             <Button variant="secondary" startIcon={<Plus />} onClick={onCreateAction}>
-              Configure your first Orama Cloud index
+              Configure your first Orama Cloud datasource
             </Button>
           }
         />

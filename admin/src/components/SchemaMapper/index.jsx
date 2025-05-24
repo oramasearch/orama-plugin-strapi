@@ -120,7 +120,7 @@ const SchemaMapper = ({ collection, contentTypeSchema, onSchemaChange }) => {
       </Typography>
       <Flex style={{ marginBottom: 16, marginTop: 4 }}>
         <Typography variant="gamma" color="grey-600">
-          Select the attributes you want to include in your Orama Cloud index document.
+          Select the attributes you want to include in your Orama Cloud document.
         </Typography>
       </Flex>
       <Box>

@@ -51,17 +51,17 @@ const CollectionForm = ({
               <Flex gap={4} style={{ width: '100%' }}>
                 <Box style={{ flexGrow: 1 }}>
                   <Field.Root id="with_field" style={{ width: '100%' }}>
-                    <Field.Label>Index ID</Field.Label>
+                    <Field.Label>Datasource ID</Field.Label>
                     <TextInput
                       required
-                      onChange={(e) => onFieldChange({ name: 'indexId', value: e.target.value })}
-                      label="Index ID"
-                      placeholder="Orama Cloud Index ID"
-                      name="indexId"
-                      id="indexId"
-                      hint="Your Orama Cloud Index ID. Go to Orama Dashboard > Indexes to find it."
+                      onChange={(e) => onFieldChange({ name: 'datasourceId', value: e.target.value })}
+                      label="Datasource ID"
+                      placeholder="Orama Cloud Datasource ID"
+                      name="datasourceId"
+                      id="datasourceId"
+                      hint="Your Orama Cloud Datasource ID. Go to Orama Dashboard > Projects > Collections > Datasources to find it."
                       style={{ width: '100%' }}
-                      value={collection?.indexId}
+                      value={collection?.datasourceId}
                     />
                     <Field.Error />
                     <Field.Hint />
@@ -89,7 +89,7 @@ const CollectionForm = ({
                       placeholder="Content Type"
                       name="entity"
                       id="entity"
-                      hint="Choose the Content Type you want to map with your index on Orama Cloud."
+                      hint="Choose the Content Type you want to map with your datasource on Orama Cloud."
                       style={{ width: '100%' }}
                       value={collection?.entity}
                     >
@@ -166,7 +166,7 @@ const CollectionForm = ({
                       onChange={(value) => onFieldChange({ name: 'updateCron', value })}
                       name="updateCron"
                       id="updateCron"
-                      hint="Set the frequency to update your index."
+                      hint="Set the frequency to update your datasource."
                       value={collection?.updateCron || '0 * * * *'}
                       defaultValue={collection?.updateCron || '0 * * * *'}
                     >

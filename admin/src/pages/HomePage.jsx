@@ -9,9 +9,9 @@ import CollectionsTable from '../components/CollectionsTable'
 import CollectionForm from '../components/CollectionForm'
 
 const isValidCollection = (collections, newCollection) => {
-  if (collections.filter((col) => col.indexId === newCollection.indexId).length > 1) {
+  if (collections.filter((col) => col.datasourceId === newCollection.datasourceId).length > 1) {
     return {
-      error: 'Index ID must be unique'
+      error: 'Datasource ID must be unique'
     }
   }
 
@@ -26,9 +26,9 @@ const isValidCollection = (collections, newCollection) => {
     }
   }
 
-  if (newCollection.indexId?.length === 0) {
+  if (newCollection.datsourceId?.length === 0) {
     return {
-      error: 'Index ID is required'
+      error: 'Datasource ID is required'
     }
   }
 
@@ -90,7 +90,7 @@ const HomePage = () => {
 
   const handleCreateClick = () => {
     setCurrentCollection({
-      indexId: '',
+      datasourceId: '',
       entity: undefined,
       includedRelations: [],
       includeDrafts: false,
@@ -238,7 +238,7 @@ const HomePage = () => {
     <Page.Main>
       <Layouts.Header
         title="Orama Cloud"
-        subtitle="Manage collections to sync content types with your indexes on Orama Cloud."
+        subtitle="Manage collections to sync content types with your datasources on Orama Cloud."
         as="h2"
         primaryAction={
           <Flex gap={2}>
@@ -255,7 +255,7 @@ const HomePage = () => {
                   variant="secondary"
                   style={{ whiteSpace: 'nowrap', textDecoration: 'none' }}
                 >
-                  View indexes
+                  View datasources
                 </LinkButton>
               </>
             )}
@@ -319,7 +319,7 @@ const HomePage = () => {
                           </Flex>
                           <Flex gap={4}>
                             <LinkButton
-                              href={`https://cloud.orama.com/indexes/view/${currentCollection.indexId}`}
+                              href={`https://cloud.orama.com/indexes/view/${currentCollection.datasourceId}`}
                               isExternal
                               endIcon={<ExternalLink width={10} />}
                               variant="tertiary"
@@ -328,7 +328,7 @@ const HomePage = () => {
                                 textDecoration: 'none'
                               }}
                             >
-                              View index
+                              View datasource
                             </LinkButton>
                             <Button onClick={handleUpdate} loading={isSaving}>
                               Update
@@ -360,7 +360,7 @@ const HomePage = () => {
                     <Modal.Body>
                       <Box>
                         <Typography>
-                          By doing a manual deploy, your index will be updated immediately
+                          By doing a manual deploy, your datasource will be updated immediately
                           <br />
                           with the most recent data from your Content-Type{' '}
                           <Flex inline>
@@ -381,7 +381,7 @@ const HomePage = () => {
                       </Flex>
                       <Flex gap={2}>
                         <LinkButton
-                          href={`https://cloud.orama.com/indexes/view/${currentCollection.indexId}`}
+                          href={`https://cloud.orama.com/indexes/view/${currentCollection.datasourceId}`}
                           isExternal
                           endIcon={<ExternalLink width={10} />}
                           variant="tertiary"
@@ -390,7 +390,7 @@ const HomePage = () => {
                             textDecoration: 'none'
                           }}
                         >
-                          View index
+                          View datasource
                         </LinkButton>
                         <Button onClick={handleDeploy} variant="primary">
                           Deploy now
